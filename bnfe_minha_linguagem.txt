@@ -1,0 +1,40 @@
+t_program = "main(){" t_cmd "}"
+
+t_cmd = (t_cmd_var | t_cmd_if | t_cmd_while) [t_cmd]
+
+t_cmd_var = (t_tipo_var " " t_definir_var ";")
+
+t_tipo_var = ("int" | "double" | "char" | "doubleE")
+
+t_definir_var = t_id_var ["," t_definir_var]
+
+t_id_var = t_letra {t_digito | t_letra}*
+
+t_cmd_if = "if" t_bool "{" t_cmd "}" [t_cmd_else]
+
+t_bool = "(" t_valor | ((t_valor | t_id_var | t_bool) (t_operador_logico | t_operador_relacional) 
+	(t_valor | t_id_var| t_bool)) ")"
+
+t_operador_relacional = ( "<" | ">" | "<=" | ">=" | "==" | "!=" )
+
+t_operador_logico = ( "&&" | "||" | "!")
+
+t_cmd_else = "else" (t_cmd_if|"{" t_cmd "}")
+
+t_cmd_while = t_bool "{" t_cmd "}"
+
+t_letra = ("A" | "a" | "B" | "b" | "C" | "c" | "D" | "d" | "E" | "e" | "F" | "f" | "G"|
+ "g" | "H" | "h" | "I" | "i" | "J" | "j" | "K" | "k" | "L" | "l" | "M" | "m" | "N" |
+  "n" | "O" | "o" | "P" | "p" | "Q" | "q" | "R" | "r" | "S" | "s" | "T" | "t" | "U" |
+   "u" | "V" | "v" | "W" | "w" | "X" | "x" | "Y" | "y" | "Z" | "z" )
+
+t_digito = ("0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9")
+
+t_valor = t_valor_int | t_valor_double | t_valor_E
+
+t_valor_int = {t_digito}+
+
+t_valor_double = t_valor_int [ "." t_valor_int ]
+
+t_valor_E = t_valor_double "E" t_valor_int
+
