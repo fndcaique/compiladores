@@ -1,0 +1,52 @@
+.code-area{
+    -fx-background-color: #232323;
+    
+    -fx-font-size: 16 px;
+    -fx-fill: white;
+}
+.textsimple{
+    -fx-fill: yellow;
+}
+number{
+    -fx-fill: #f92472;
+}
+
+.keyword {
+    -fx-fill: #0000CD;
+    -fx-font-weight: bold;
+}
+.type{
+    -fx-fill: red;
+}
+.command{
+    -fx-fill: #f92472;
+}
+.semicolon {
+    -fx-font-weight: bold;
+}
+.paren {
+    -fx-fill: firebrick;
+    -fx-font-weight: bold;
+}
+.bracket {
+    -fx-fill: coral;
+    -fx-font-weight: bold;
+}
+.brace {
+    -fx-fill: teal;
+    -fx-font-weight: bold;
+}
+.character{
+    -fx-fill: crimson;
+}
+.string {
+    -fx-fill: blue;
+}
+
+.comment {
+    -fx-fill: cadetblue;
+}
+
+.paragraph-box:has-caret {
+    -fx-background-color: lightgray;
+}

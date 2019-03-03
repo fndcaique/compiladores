@@ -1,0 +1,57 @@
+.root{
+    -fx-background-color: #363536;
+}
+.menu-bar{
+    -fx-background-color: #363536;
+
+}
+
+.menu-bar .label:hover{
+    -fx-text-fill: red;
+}
+
+/* estilos refentes ao menu [Arquivo]*/
+.menu:hover{
+    -fx-background-color: #4a4a4b;
+}
+
+.menu:showing {
+    -fx-background-color: #4a4a4b;
+}
+
+
+.menu .label{
+    -fx-text-fill: lightgray;
+    /*-fx-font-size: 25 pt;
+    -fx-label-line-length: 8;
+    -fx-background-color: #cc66ff;*/
+}
+.menu .label:hover{
+    -fx-text-fill: lightgray;
+}
+
+.menu .label:showing{
+    -fx-text-fill: green;
+}
+
+
+
+
+/*Estilos referentes a lista do menu */
+.menu-item{
+    -fx-background-color: #242424;
+}
+.menu-item:hover{
+    -fx-background-color: #283874;
+    -fx-text-fill: white;
+}
+.menu-item .label{
+}
+.separator-menu-item{
+    -fx-background-color: red;
+}
+.separator *.line {
+    -fx-border-width: 0;
+    -fx-background-color: lightgray;
+}
+

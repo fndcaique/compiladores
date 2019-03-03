@@ -1,0 +1,10 @@
+begin
+
+int a = 0, b = 1000;
+while(a < b)
+{
+    a = a + 1;
+    b = b / 2;
+}
+
+end
