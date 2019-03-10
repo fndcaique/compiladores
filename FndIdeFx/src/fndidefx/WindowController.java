@@ -32,6 +32,9 @@ import javafx.event.EventHandler;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -67,12 +70,21 @@ public class WindowController implements Initializable {
     private JFXButton btopen;
     @FXML
     private Tab tabcode;
+    @FXML
+    private TableView<?> tbvVars;
+    @FXML
+    private TableColumn<String, String> colId;
+    @FXML
+    private TableColumn<String, String> colType;
+    @FXML
+    private TableColumn<String, String> colValue;
+    @FXML
+    private TextArea txLog;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         initializeCodeArea();
-        Tab tb = tabcode;
-        tb.setContent(stackpane);
+        tabcode.setContent(stackpane);
         new Thread(() -> {
             try {
                 Thread.sleep(2000); // 2 segundos
@@ -164,7 +176,7 @@ public class WindowController implements Initializable {
                     : matcher.group("SEMICOLON") != null ? "semicolon"
                     : matcher.group("CHARACTER") != null ? "character"
                     : matcher.group("COMMENT") != null ? "comment"
-                    : "textsimple";
+                    : null;
 
             //* never happens */ assert styleClass != null;
             spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);

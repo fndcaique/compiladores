@@ -1,11 +1,11 @@
 .code-area{
-    -fx-background-color: #232323;
+    /*-fx-background-color: #232323;*/
     
     -fx-font-size: 16 px;
     -fx-fill: white;
 }
 .textsimple{
-    -fx-fill: yellow;
+    -fx-text-fill: yellow;
 }
 number{
     -fx-fill: #f92472;

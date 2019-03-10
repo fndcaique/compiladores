@@ -1,0 +1,27 @@
+begin
+	number cont = 1;
+	string nome = "Bruna", sobrenome = "Kushikawa",
+
+	cpf = "45194056885";
+	cpf = 4+2^(1/cont);
+	
+	while( 5>5)
+	{
+		string teste = "teste";
+		cpf = "hahhahha";
+		cont = 57E-6;
+		if(cpf == "ola")
+		{
+			for(i=0 ; i > 5; i++)
+			{
+			
+				ok = ok;
+			}
+		}
+		else
+		{
+			ok = 1;
+		}
+		cont = cont+1;
+	}
+end

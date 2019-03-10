@@ -5,6 +5,9 @@
  */
 package fndidefx;
 
+import fndidefx.compilador.AnaliseLexica;
+import fndidefx.compilador.Token;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
@@ -21,7 +24,6 @@ import javafx.util.Duration;
  * @author fnd
  */
 public class FndIdeFx extends Application {
-
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -40,13 +42,46 @@ public class FndIdeFx extends Application {
         stage.show();
     }
 
+    private static String cadeia = "int main () { int a = 0 ; return a ; } $";
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        launch(args);
+        //launch(args);
+        Scanner sc = new Scanner(System.in);
+        String str = sc.nextLine(), code = "";
+        while (!str.endsWith("end")) {
+            code+=str+'\n';
+            str = sc.nextLine();
+        }
+        code+="end\n";
+        
+        AnaliseLexica al = new AnaliseLexica(code);
+        str = al.nextLexema();
+        while(!"$".equals(str)){
+            System.out.println(str);
+            Token tk = al.findToken(str);
+            System.out.println(tk.getName() + ": "+tk.getMatch());
+            str = al.nextLexema();
+        }
+        
         System.exit(0);
+    }
+
+    public static String nextToken() {
+        String tk = "";
+        int i = 0;
+        while (i < cadeia.length() && cadeia.charAt(i) != ' ') {
+            tk += cadeia.charAt(i++);
+        }
+        while (i < cadeia.length() && cadeia.charAt(i) == ' ') {
+            ++i;
+        }
+
+        cadeia = cadeia.substring(i);
+
+        return tk;
     }
 
 }
