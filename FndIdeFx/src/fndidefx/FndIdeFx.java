@@ -42,46 +42,33 @@ public class FndIdeFx extends Application {
         stage.show();
     }
 
-    private static String cadeia = "int main () { int a = 0 ; return a ; } $";
-
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         //launch(args);
-        Scanner sc = new Scanner(System.in);
+        /*Scanner sc = new Scanner(System.in);
         String str = sc.nextLine(), code = "";
         while (!str.endsWith("end")) {
-            code+=str+'\n';
+            //System.out.println(str);
+            code += str + '\n';
             str = sc.nextLine();
         }
-        code+="end\n";
-        
+        code += "end\n";
+
         AnaliseLexica al = new AnaliseLexica(code);
         str = al.nextLexema();
-        while(!"$".equals(str)){
+        while (!"$".equals(str)) {
             System.out.println(str);
             Token tk = al.findToken(str);
-            System.out.println(tk.getName() + ": "+tk.getMatch());
+            if (tk != null) {
+                System.out.println(tk.getName() + ": " + tk.getMatch());
+            }
             str = al.nextLexema();
-        }
-        
+            System.out.println("STR:"+str);
+        }*/
+
         System.exit(0);
-    }
-
-    public static String nextToken() {
-        String tk = "";
-        int i = 0;
-        while (i < cadeia.length() && cadeia.charAt(i) != ' ') {
-            tk += cadeia.charAt(i++);
-        }
-        while (i < cadeia.length() && cadeia.charAt(i) == ' ') {
-            ++i;
-        }
-
-        cadeia = cadeia.substring(i);
-
-        return tk;
     }
 
 }

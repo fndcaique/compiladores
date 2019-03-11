@@ -1,8 +1,19 @@
 .code-area{
-    /*-fx-background-color: #232323;*/
-    
+    -fx-background-color: #232323;
+
     -fx-font-size: 16 px;
     -fx-fill: white;
+}
+
+.code-area .text{ /*texto do code area*/
+    -fx-fill: lightgrey;
+}
+
+.code-area .lineno { /*coluna dos numeros de linhas*/
+    -fx-background-color: #283874;
+    
+}
+.code-area .lineno .text{ /*texto da coluna dos numeros de linhas*/
 }
 .textsimple{
     -fx-text-fill: yellow;
@@ -12,32 +23,32 @@ number{
 }
 
 .keyword {
-    -fx-fill: #0000CD;
+    -fx-fill: #0000CD !important;
     -fx-font-weight: bold;
 }
 .type{
-    -fx-fill: red;
+    -fx-fill: red !important;
 }
 .command{
-    -fx-fill: #f92472;
+    -fx-fill: #f92472 !important;
 }
 .semicolon {
-    -fx-font-weight: bold;
+    -fx-font-weight: bold !important;
 }
 .paren {
-    -fx-fill: firebrick;
+    -fx-fill: firebrick !important;
     -fx-font-weight: bold;
 }
 .bracket {
-    -fx-fill: coral;
+    -fx-fill: coral !important;
     -fx-font-weight: bold;
 }
 .brace {
-    -fx-fill: teal;
+    -fx-fill: teal !important;
     -fx-font-weight: bold;
 }
 .character{
-    -fx-fill: crimson;
+    -fx-fill: crimson !important;
 }
 .string {
     -fx-fill: blue;

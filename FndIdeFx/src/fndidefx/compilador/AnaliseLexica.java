@@ -6,27 +6,65 @@
 package fndidefx.compilador;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  *
  * @author fndcaique
  */
 public class AnaliseLexica {
+    
+    private class PrivateToken{
+        private String token, match;
 
-    private String cadeia, entrada;
-    private final ArrayList<Token> tokens;
+        public PrivateToken(String token, String match) {
+            this.token = token;
+            this.match = match;
+        }
+
+        public String getToken() {
+            return token;
+        }
+
+        public void setToken(String token) {
+            this.token = token;
+        }
+
+        public String getMatch() {
+            return match;
+        }
+
+        public void setMatch(String match) {
+            this.match = match;
+        }
+        
+        public boolean produz(String lexema){
+            return lexema.matches(match);
+        }
+        
+    }
+
+    private String cadeia;
+    private final ArrayList<PrivateToken> tokens;
     private final String[] arrtokens = new String[]{
         "t_begin:begin",
         "t_end:end",
         "t_int:int",
         "t_double:double",
-        "t_char:char",
-        "t_virgula:,",
-        "t_abre_chave:[{]",
-        "t_fecha_chave:[}]",
+        "t_exp:exp",
+        "t_while:while",
+        "t_do:do",
         "t_if:if",
         "t_else:else",
+        "t_virgula:,",
+        "t_abre_parenteses:[(]",
+        "t_fecha_parenteses:[)]",
+        "t_abre_chave:[{]",
+        "t_fecha_chave:[}]",
+        "t_op_mais:[+]",
+        "t_op_menos:[-]",
+        "t_op_mult:[*]",
+        "t_op_div:[/]",
+        "t_atribuidor:=",
         "t_menor:<",
         "t_maior:>",
         "t_igual:==",
@@ -35,60 +73,54 @@ public class AnaliseLexica {
         "t_diferente:!=",
         "t_and:&&",
         "t_or:||",
-        "t_while:while",
-        "t_do:do",
-        "t_letra:[a-zA-Z]",
-        "t_algarismo:[0-9]",
         "t_valor_int:[0-9]+",
-        "t_valor_double:[0-9]+[.][0-9]+",
-        "t_op_mais:[+]",
-        "t_op_menos:[-]",
-        "t_op_mult:[*]",
-        "t_op_div:[/]",
-        "t_atribuidor:=",
-        "t_id_var:[a-zA-Z]+[\\w]*"
-    };
+        "t_valor_double:[0-9]+[[.][0-9]+]*",
+        "t_valor_exp:[0-9]+[[.][0-9]+]*E[0-9]+",
+        "t_id_var:[a-zA-Z]+"};
+
+    /*
+    aEb = a * (10^b)
+    
+     */
 
     public AnaliseLexica(String entrada) {
+        cadeia = entrada;
         tokens = new ArrayList<>();
-        cadeia = entrada + "$";
         for (String token : arrtokens) {
             String[] ar = token.split(":");
-            tokens.add(new Token(ar[0], ar[1]));
+            tokens.add(new PrivateToken(ar[0], ar[1]));
         }
     }
-    
+
     /**
      *
      * @return
      */
-    public String nextLexema() {
-
-        String tk = "";
-        int i = 0;
-        char c = cadeia.charAt(i++);
-        
-        tk += c;
-        while (i < cadeia.length() && Character.isLetterOrDigit(c)) { // revisar erro em a*a, a*-a, -a*b
-            tk += c;
-            c = cadeia.charAt(i++);
+    public Token nextToken() {
+        String lex = "";
+        ArrayList<PrivateToken> tks = tokens;
+        PrivateToken tk = null;
+        int ini = 0, fim = 0;
+        while (fim < cadeia.length() && tks != null) { /*  2t#  */
+            lex += cadeia.charAt(fim++);
+            tks = findToken(tks, lex);
         }
-
-        while (i < cadeia.length() && cadeia.charAt(i) == ' ') {
-            ++i;
-        }
-
-        cadeia = cadeia.substring(i);
-
-        return tk;
+        lex = cadeia.subSequence(ini, fim-1)+"";
+        cadeia = cadeia.substring(fim).trim();
+        return new Token(findToken(tokens, lex).get(0).getToken(), lex);
     }
 
-    public Token findToken(String lexema) {
-        for (Token token : tokens) {
-            if(token.produz(lexema))
-                return token;
+    /**
+     * returna os tokens que produzem o lexema
+     */
+    private ArrayList<PrivateToken> findToken(ArrayList<PrivateToken> tokens, String lexema) {
+        ArrayList<PrivateToken> list = new ArrayList<>();
+        for (PrivateToken tk : tokens) {
+            if(tk.produz(lexema) || (!lexema.contains("[") && tk.getMatch().startsWith(lexema))){
+                list.add(tk);
+            }
         }
-        return null;
+        return list.isEmpty() ? null : list;
     }
 
 }

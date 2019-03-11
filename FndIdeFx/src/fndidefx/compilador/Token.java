@@ -9,11 +9,11 @@ package fndidefx.compilador;
  *
  * @author fndcaique
  */
-public class Token implements Comparable<Token>{
-    private String name, match;
-    public Token(String name, String match) {
+public class Token {
+    private String name, lexema;
+    public Token(String name, String lexema) {
         this.name = name;
-        this.match = match;
+        this.lexema = lexema;
     }
 
     public String getName() {
@@ -24,21 +24,12 @@ public class Token implements Comparable<Token>{
         this.name = name;
     }
 
-    public String getMatch() {
-        return match;
+    public String getLexema() {
+        return lexema;
     }
 
-    public void setMatch(String match) {
-        this.match = match;
-    }
-
-    @Override
-    public int compareTo(Token o) {
-        return match.compareTo(o.getMatch());
-    }
-
-    public boolean produz(String lexema){
-        return lexema.matches(match);
+    public void setLexema(String lexema) {
+        this.lexema = lexema;
     }
     
 }
