@@ -15,24 +15,24 @@
 }
 .code-area .lineno .text{ /*texto da coluna dos numeros de linhas*/
 }
-.textsimple{
-    -fx-text-fill: yellow;
-}
+
 number{
-    -fx-fill: #f92472;
+    -fx-fill: green !important;
 }
 
 .keyword {
-    -fx-fill: #0000CD !important;
+    -fx-fill: lightskyblue !important;
     -fx-font-weight: bold;
 }
 .type{
-    -fx-fill: red !important;
+    -fx-fill: #DA70D6 !important;
+    -fx-font-weight: bold;
 }
 .command{
-    -fx-fill: #f92472 !important;
+    -fx-fill: orange !important;
 }
 .semicolon {
+    -fx-fill: coral !important;
     -fx-font-weight: bold !important;
 }
 .paren {
@@ -47,17 +47,11 @@ number{
     -fx-fill: teal !important;
     -fx-font-weight: bold;
 }
-.character{
-    -fx-fill: crimson !important;
-}
-.string {
-    -fx-fill: blue;
-}
 
 .comment {
-    -fx-fill: cadetblue;
+    -fx-fill: green !important;
 }
 
-.paragraph-box:has-caret {
-    -fx-background-color: lightgray;
+.paragraph-box:has-caret { /*linha do cursor |*/
+    -fx-background-color: #444444;
 }

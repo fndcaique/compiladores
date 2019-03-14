@@ -1,6 +1,10 @@
 begin
+/*criando vars*/
     int a = 1, b = 0, c = 3;
+//usando loop    
     while(a < b){
         b = b+1;
     }
+/*fim do programa*/
 end
+

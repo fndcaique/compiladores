@@ -11,10 +11,27 @@ package fndidefx.compilador;
  */
 public class Token {
     private String name, lexema;
+    private int linha;
     public Token(String name, String lexema) {
         this.name = name;
         this.lexema = lexema;
+        linha = 0;
     }
+    
+    public Token(String name, String lexema, int linha) {
+        this.name = name;
+        this.lexema = lexema;
+        this.linha = linha;
+    }
+
+    public int getLinha() {
+        return linha;
+    }
+
+    public void setLinha(int linha) {
+        this.linha = linha;
+    }
+    
 
     public String getName() {
         return name;

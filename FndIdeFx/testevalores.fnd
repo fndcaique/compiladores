@@ -1,0 +1,20 @@
+3 // int
+3e // error
+
+
+
+3.2 // double
+3.3e // error
+ 
+
+3e3 // error
+3.3e3 // error
+3.3e // error
+3e+3 // exp
+3e-3 // exp
+3.3e+3 // exp
+3.3e-3 // exp
+3.+3e3 // error
+3.-3e3 // error
+3.3-e+3 // error
+3.3+e-3 // error

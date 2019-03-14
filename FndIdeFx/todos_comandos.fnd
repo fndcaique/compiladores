@@ -1,0 +1,26 @@
+begin
+
+    int inteiro, cont;
+    double decimal = 10.2;
+    exp expo;
+
+    while(inteiro < 100) {    
+        decimal = decimal * 2;
+        inteiro = inteiro + decimal;
+    }
+    
+    cont = 1;
+    do {
+        cont = cont + 1;
+        decimal = decimal / 10;
+    } while(decimal > 10);
+
+    if(cont >= 2){
+        expo = decimal*10*cont;
+    } else if(decimal / cont == 10){
+        decimal = 0;
+    } else {
+        expo = 10000;
+    }
+
+end

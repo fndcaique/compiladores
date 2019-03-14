@@ -6,6 +6,9 @@
 package fndidefx;
 
 import com.jfoenix.controls.JFXButton;
+import fndidefx.compilador.AnaliseLexica;
+import fndidefx.compilador.AnaliseSintatica;
+import fndidefx.compilador.Token;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.net.URL;
@@ -52,6 +55,8 @@ import org.reactfx.Subscription;
  */
 public class WindowController implements Initializable {
 
+    private AnaliseSintatica anasin;
+    private AnaliseLexica analex;
     private boolean codechanged;
     private File file;
     private String dialogResult;
@@ -85,6 +90,11 @@ public class WindowController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         initializeCodeArea();
         tabcode.setContent(stackpane);
+        disable(true);
+        startEventClose();
+    }
+    
+    private void startEventClose(){
         new Thread(() -> {
             try {
                 Thread.sleep(2000); // 2 segundos
@@ -93,6 +103,12 @@ public class WindowController implements Initializable {
             }
             ((Stage) btnew.getScene().getWindow()).setOnCloseRequest(closeWindow());
         }).start();
+    }
+    
+    private void disable(boolean v){
+        codearea.setDisable(v);
+        btcompile.setDisable(v);
+        btsave.setDisable(v);
     }
 
     private void initializeCodeArea() {
@@ -115,9 +131,7 @@ public class WindowController implements Initializable {
         // run: `cleanupWhenNoLongerNeedIt.unsubscribe();`
         virtscrollpane = new VirtualizedScrollPane(codearea);
         stackpane = new StackPane(virtscrollpane);
-        codearea.setDisable(true);
         codearea.setOnKeyTyped(codeAreaKeyTyped());
-        codearea.requestFocus();
     }
 
     private EventHandler<KeyEvent> codeAreaKeyTyped() {
@@ -134,29 +148,29 @@ public class WindowController implements Initializable {
     }
 
     private static final String[] KEYWORDS = {"begin", "end"},
-            KEYTYPES = {"int", "double", "doubleE", "char"},
+            KEYTYPES = {"int", "double", "exp"},
             KEYCOMMAND = {"if", "else", "while", "do"};
 
     private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
-    private static final String KEYTYPES_PATTERN = "\\b(" + String.join("|", KEYTYPES) + ")\\b";
-    private static final String KEYCOMMAND_PATTERN = "\\b(" + String.join("|", KEYCOMMAND) + ")\\b";
+    private static final String TYPES_PATTERN = "\\b(" + String.join("|", KEYTYPES) + ")\\b";
+    private static final String COMMAND_PATTERN = "\\b(" + String.join("|", KEYCOMMAND) + ")\\b";
+    private static final String NUMBER_PATTERN = "\\d";
     private static final String PAREN_PATTERN = "\\(|\\)";
     private static final String BRACE_PATTERN = "\\{|\\}";
     private static final String BRACKET_PATTERN = "\\[|\\]";
     private static final String SEMICOLON_PATTERN = "\\;";
-    private static final String CHARACTER_PATTERN = "\'([^\"\\\\]|\\\\.)*\'";
-    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
+    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/" + "|" + "/\\*(.|\\R)*?$";
 
     private static final Pattern PATTERN = Pattern.compile(
             "(?<KEYWORD>" + KEYWORD_PATTERN + ')' // #c586c0
-            + "|(?<TYPE>" + KEYTYPES_PATTERN + ')' // #569cd6
-            + "|(?<COMMAND>" + KEYCOMMAND_PATTERN + ')' // #
+            + "|(?<TYPE>" + TYPES_PATTERN + ')' // #569cd6
+            + "|(?<COMMAND>" + COMMAND_PATTERN + ')' // #
             + "|(?<PAREN>" + PAREN_PATTERN + ')'
             + "|(?<BRACE>" + BRACE_PATTERN + ')'
             + "|(?<BRACKET>" + BRACKET_PATTERN + ')'
             + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ')'
-            + "|(?<CHARACTER>" + CHARACTER_PATTERN + ')'
             + "|(?<COMMENT>" + COMMENT_PATTERN + ')'
+            + "|(?<NUMBER>" + NUMBER_PATTERN + ')'
     );
 
     private static StyleSpans<Collection<String>> computeHighlighting(String text) {
@@ -174,7 +188,6 @@ public class WindowController implements Initializable {
                     : matcher.group("BRACE") != null ? "brace"
                     : matcher.group("BRACKET") != null ? "bracket"
                     : matcher.group("SEMICOLON") != null ? "semicolon"
-                    : matcher.group("CHARACTER") != null ? "character"
                     : matcher.group("COMMENT") != null ? "comment"
                     : null;
 
@@ -196,6 +209,7 @@ public class WindowController implements Initializable {
         file = fc.showOpenDialog(null);
         if (file != null) {
             open(file);
+            disable(false);
         }
     }
 
@@ -228,13 +242,13 @@ public class WindowController implements Initializable {
         file = null;
         tabcode.setText("Sem Título");
         codearea.replaceText("");
-        codearea.setDisable(false);
+        disable(false);
         codearea.requestFocus();
     }
 
     private void lastLine() {
         if (!codearea.getText().isEmpty() && !codearea.getText().endsWith("\n")) {
-            codearea.replaceText(codearea.getText() + "\n");
+            codearea.appendText("\n");
         }
     }
 
@@ -318,7 +332,15 @@ public class WindowController implements Initializable {
 
     @FXML
     private void clkCompile(ActionEvent event) {
+        clkSave(event);
         System.out.println("compilando...");
+        analex = new AnaliseLexica(codearea.getText());
+        Token tk = analex.nextToken();
+        while (tk != null) {
+            System.out.println("Linha = " + (tk.getLinha() + 1) + ", Token:" + tk.getName() + ", Lexema:" + tk.getLexema());
+            tk = analex.nextToken();
+        }
+        System.out.println("COMPILADO");
     }
 
     private void markChange() {

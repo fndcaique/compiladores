@@ -19,7 +19,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fndidefx.WindowController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fndidefx.WindowController">
    <top>
       <VBox prefHeight="0.0" prefWidth="600.0" BorderPane.alignment="CENTER">
          <children>
@@ -109,32 +109,32 @@
       </VBox>
    </top>
    <center>
-      <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" BorderPane.alignment="CENTER">
+      <SplitPane dividerPositions="0.75" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" BorderPane.alignment="CENTER">
          <items>
-            <SplitPane dividerPositions="0.5" prefHeight="200.0" prefWidth="200.0">
-               <items>
-                  <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
-                    <tabs>
-                      <Tab fx:id="tabcode" text="Sem Título" />
-                    </tabs>
-                  </TabPane>
-                  <TableView fx:id="tbvVars" prefHeight="200.0" prefWidth="200.0">
-                    <columns>
-                      <TableColumn fx:id="colId" prefWidth="101.0" text="Id" />
-                      <TableColumn fx:id="colType" prefWidth="96.0" text="Type" />
-                        <TableColumn fx:id="colValue" prefWidth="75.0" text="Value" />
-                    </columns>
-                     <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                     </columnResizePolicy>
-                  </TableView>
-               </items>
-            </SplitPane>
-            <TabPane>
+            <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+              <tabs>
+                <Tab fx:id="tabcode" text="Sem Título" />
+              </tabs>
+            </TabPane>
+            <TabPane prefHeight="150.0" prefWidth="598.0">
                <tabs>
-                  <Tab text="Log">
+                  <Tab closable="false" text="Log">
                      <content>
-                        <TextArea fx:id="txLog" prefHeight="200.0" prefWidth="200.0" />
+                        <TextArea fx:id="txLog" editable="false" focusTraversable="false" prefHeight="200.0" prefWidth="200.0" />
+                     </content>
+                  </Tab>
+                  <Tab closable="false" text="Variáveis">
+                     <content>
+                        <TableView fx:id="tbvVars" focusTraversable="false" prefHeight="161.0" prefWidth="288.0">
+                          <columns>
+                            <TableColumn fx:id="colId" prefWidth="101.0" text="Id" />
+                            <TableColumn fx:id="colType" prefWidth="96.0" text="Tipo" />
+                              <TableColumn fx:id="colValue" prefWidth="75.0" text="Valor" />
+                          </columns>
+                           <columnResizePolicy>
+                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                        </TableView>
                      </content>
                   </Tab>
                </tabs>
