@@ -1,10 +1,14 @@
 begin
-/*criando vars*/
-    int a = 1, b = 0, c = 3;
-//usando loop    
-    while(a < b){
-        b = b+1;
+int a = 3e+3, b;
+if(a < b){
+    while(2 > a){
+        c = a*e;
     }
-/*fim do programa*/
+}
+sa = true + 3;
+if(sa > 7){
+    a = t;
+} else if(joia >= 3 && !(10 > 4)){
+    abelha = a;
+}
 end
-

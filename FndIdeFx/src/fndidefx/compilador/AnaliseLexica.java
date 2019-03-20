@@ -5,6 +5,7 @@
  */
 package fndidefx.compilador;
 
+import fndidefx.compilador.Token.TokenType;
 import java.util.ArrayList;
 
 /**
@@ -13,212 +14,230 @@ import java.util.ArrayList;
  */
 public class AnaliseLexica {
 
-    public static String ERROR = "t_erro_lexico";
-
+    public static String ERROR = "ERRO_LEXICO";
+    private ArrayList<Erro> erros;
+    private boolean continuar;
     private int linha;
-    private String cadeia;
-    private final ArrayList<TokenMatch> tokens;
-    private final String[] arrtokens = new String[]{ // falta tratar comentarios
-        "t_begin:begin",
-        "t_end:end",
-        "t_int:int",
-        "t_double:double",
-        "t_exp:exp",
-        "t_while:while",
-        "t_do:do",
-        "t_if:if",
-        "t_else:else",
-        "t_ponto:\\.",
-        "t_virgula:,",
-        "t_ponto_virgula:;",
-        "t_abre_parenteses:[(]",
-        "t_fecha_parenteses:[)]",
-        "t_abre_chaves:[{]",
-        "t_fecha_chaves:[}]",
-        "t_mais:[+]",
-        "t_menos:[-]",
-        "t_mult:[*]",
-        "t_div:[/]",
-        "t_atribuidor:=",
-        "t_menor:<",
-        "t_maior:>",
-        "t_igual:==",
-        "t_menor_igual:<=",
-        "t_maior_igual:>=",
-        "t_diferente:!=",
-        "t_and:&&",
-        "t_or:\\|\\|",
-        "t_valor_int:[0-9]+",
-        "t_valor_double:[0-9]+(\\.[0-9]+)*",
-        "t_valor_exp:[0-9]+(\\.[0-9]+)*e(\\+|-)[0-9]+",
-        "t_id_var:[a-zA-Z](\\d|[a-zA-Z])*",
-        "t_comentario_linha://",
-        "t_abre_comentario:/\\*",
-        "t_fecha_comentario:\\*/",
-        "t_quebra_linha:\\n"};
+    private String text;
+    private boolean finalisado;
+    //private final ArrayList<TokenType> tokens;
 
-    /*
-    aEb = a * (10^b)
-    
-     */
     public AnaliseLexica(String entrada) {
         linha = 0;
         if (!entrada.endsWith("\n")) {
             entrada += '\n';
         }
-        cadeia = entrada;
-        tokens = new ArrayList<>();
-        for (String token : arrtokens) {
-            String[] ar = token.split(":");
-            tokens.add(new TokenMatch(ar[0], ar[1]));
-        }
+        text = entrada;
+        erros = new ArrayList<>();
+        finalisado = false;
     }
 
-    private boolean isSimbleSimbol(char c) {
-        return c == '+' || c == '-' || c == '.';
+    public ArrayList<Erro> getErros() {
+        return erros;
     }
 
-    private void trimStart() {
+    /*
+    aEb = a * (10^b)
+    
+     */
+    private void removerEspacosInicio() {
         int i = 0;
-        while (i < cadeia.length() && cadeia.charAt(i) == ' ') {
+        while (i < text.length() && text.charAt(i) == ' ') {
             i++;
         }
-        cadeia = cadeia.substring(i);
+        text = text.substring(i);
+    }
+
+    private boolean mais(char c) {
+        return c == '+';
+    }
+
+    private boolean menos(char c) {
+        return c == '-';
+    }
+
+    private boolean mult(char c) {
+        return c == '*';
+    }
+
+    private boolean div(char c) {
+        return c == '/';
+    }
+
+    private boolean operadorAritmetico(char c) {
+        return mais(c) || menos(c) || mult(c) || div(c);
+    }
+
+    private boolean ponto(char c) {
+        return c == '.';
+    }
+
+    private boolean virgula(char c) {
+        return c == ',';
+    }
+
+    private boolean pontoVirgula(char c) {
+        return c == ';';
+    }
+
+    private boolean not(char c) {
+        return c == '!';
+    }
+
+    private boolean and(char c) {
+        return c == '&';
+    }
+
+    private boolean or(char c) {
+        return c == '|';
+    }
+
+    private boolean abreParentese(char c) {
+        return c == '(';
+    }
+
+    private boolean fechaParentese(char c) {
+        return c == ')';
+    }
+
+    private boolean abreChave(char c) {
+        return c == '{';
+    }
+
+    private boolean fechaChave(char c) {
+        return c == '}';
+    }
+
+    private boolean nl(char c) {
+        return c == '\n';
+    }
+
+    private boolean space(char c) {
+        return c == ' ';
+    }
+
+    private boolean atribuir(char c) {
+        return c == '=';
+    }
+
+    private boolean letra(char c) {
+        return Character.isLetter(c);
+    }
+
+    private boolean numero(char c) {
+        return Character.isDigit(c);
+    }
+
+    private boolean delimitador(char c) {
+        return nl(c) || space(c) || virgula(c) || pontoVirgula(c) || atribuir(c)
+                || operadorAritmetico(c) || and(c) || or(c) || not(c)
+                || abreParentese(c) || fechaParentese(c) || abreChave(c) || fechaChave(c);
     }
 
     /**
-     *
-     * @return
+     * retorna a posição do simbolo delimitador
      */
+    private int findDelimitador(int posini) {
+        while (posini < text.length() && !delimitador(text.charAt(posini))) {
+            ++posini;
+        }
+        return posini;
+    }
+
+    private int iniciaComNumero() {
+        int i = 0;
+        char c;
+        while (i < text.length() && numero(text.charAt(i))) {
+            i++;
+        }
+        if (i < text.length()) { // tem mais simbolo
+            if (ponto(text.charAt(i))) { // double
+                ++i;
+                while (i < text.length() && numero(text.charAt(i))) {
+                    ++i;
+                }
+                if (i < text.length()
+                        && text.charAt(i) == 'e' && ++i < text.length() /*exp*/
+                        && (mais(c = text.charAt(i)) || menos(c))) {
+                    i = findDelimitador(i + 1);
+                } else {
+                    i = findDelimitador(i);
+                }
+            } else if (text.charAt(i) == 'e' && ++i < text.length() /*exp*/
+                    && (mais(c = text.charAt(i)) || menos(c))) {
+                i = findDelimitador(i + 1);
+            } else {
+                i = findDelimitador(i);
+            }
+        }
+        return i;
+    }
+
     public Token nextToken() {
-        if (cadeia.isEmpty()) {
+
+        if (finalisado) {
             return null;
         }
-        boolean continuar;
         String lex;
         char c;
-        ArrayList<TokenMatch> tks;
-        TokenMatch tk = null;
-        int ini, fim;
+        ArrayList<TokenType> tks;
+        TokenType tk;
+        int fim;
         do {
-            ini = fim = 0;
-            tks = tokens;
+            removerEspacosInicio();
+            if (text.isEmpty()) {
+                finalisado = true;
+                return new Token(TokenType.FIM.name(), "$", linha);
+            }
+            fim = 0;
+            tk = null;
+            tks = Token.list();
             continuar = false;
-            lex = "";
-            trimStart();
-            if (cadeia.isEmpty()) {
-                return null;
-            }
-            c = cadeia.charAt(fim++);
-            lex += c;
-            if (Character.isLetterOrDigit(c)) { // letra ou numero
-                /*Verificar mudança para: (letra, [letra|numero]*) | [simbesp]+$   */
-                while (fim < cadeia.length()
-                        && (Character.isLetterOrDigit(c = cadeia.charAt(fim++)) || isSimbleSimbol(c))) {
-                    lex += c;
-                }
-                --fim;
-                tk = tokenProdutor(lex);
-            } else { // simbolos especial
-
-                while (fim < cadeia.length() && tks != null) {
-                    /*  2t#  */
-                    c = cadeia.charAt(fim++);
-                    lex += c;
-                    tks = tokenContais(tks, lex);
-                }
-                if (tks == null) {
-                    --fim;
-                }
-                lex = cadeia.subSequence(ini, fim) + "";
-                tk = tokenProdutor(lex);
-                if (tk != null) {
-                    switch (tk.getToken()) {
-                        case "t_abre_comentario":
-                            continuar = true;
-                            lex = "";
-                            while (fim < cadeia.length() && !lex.endsWith("*/")) {
-                                lex += cadeia.charAt(fim++);
-                            }
-                            break;
-                        case "t_comentario_linha":
-                            continuar = true;
-                            while (fim < cadeia.length() && cadeia.charAt(fim) != '\n') {
-                                ++fim;
-                            }
-                            break;
-                        case "t_quebra_linha":
+            c = text.charAt(0);
+            /* somente exp e comentario que não são achados com o findDelimitador*/
+            if (numero(c)) { // tokens que iniciam por numero
+                fim = iniciaComNumero();
+            } else if (text.startsWith("\n")) {
+                ++linha;
+                continuar = true;
+            } else if (letra(c)) {
+                fim = findDelimitador(0);
+            } else if (text.length() >= 2) { // se pode ser comentario
+                if (text.startsWith("//")) {
+                    fim = text.indexOf("\n");
+                } else if (text.startsWith("/*")) {
+                    fim = text.indexOf("*/");
+                    fim = fim < 0 ? text.length() : fim + 2;
+                    for (int i = 0; i < fim; ++i) {
+                        if (text.charAt(i) == '\n') {
                             ++linha;
-                            continuar = true;
-                            break;
-                        default:
-                            break;
+                        }
                     }
+                } else if (Token.parent(text.substring(0, 2)) != null) {
+                    fim = 2;
+                } else {
+                    fim = findDelimitador(0);
                 }
             }
-            /*Verificar mudança para: (letra, [letra|numero]*) | [simbesp]+$   */
-
-            cadeia = cadeia.substring(fim); // atualiza cadeia
+            if (fim == 0) { // delimitador é o primeiro caracter
+                ++fim;
+            }
+            lex = text.subSequence(0, fim) + "";
+            tk = Token.parent(lex);
+            if (tk != null) {
+                switch (tk) {
+                    case COMENTARIO_BLOCO:
+                    case COMENTARIO_LINHA:
+                        continuar = true;
+                        break;
+                }
+            }
+            text = text.substring(fim); // remove lexema atual
         } while (continuar);
-        if (tk != null) {
-            return new Token(tk.getToken(), lex, linha);
-        } else {
-            return new Token(ERROR, lex, linha);
+        if (tk == null) {
+            erros.add(new Erro(linha, ERROR + " = " + lex));
+            return new Token(TokenType.ERRO_LEXICO.name(), lex, linha);
         }
+        return new Token(tk.name(), lex, linha);
     }
-
-    private TokenMatch tokenProdutor(String lexema) {
-        for (TokenMatch token : tokens) {
-            if (token.produz(lexema)) {
-                return token;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * returna os tokens que produzem o lexema
-     */
-    private ArrayList<TokenMatch> tokenContais(ArrayList<TokenMatch> tokens, String lexema) {
-        ArrayList<TokenMatch> list = new ArrayList<>();
-        for (TokenMatch tk : tokens) {
-            if (tk.produz(lexema)
-                    || (!tk.getMatch().contains("[") && tk.getMatch().startsWith(lexema))) {
-                list.add(tk);
-            }
-        }
-        return list.isEmpty() ? null : list;
-    }
-
-    private class TokenMatch {
-
-        private String token, match;
-
-        public TokenMatch(String token, String match) {
-            this.token = token;
-            this.match = match;
-        }
-
-        public String getToken() {
-            return token;
-        }
-
-        public void setToken(String token) {
-            this.token = token;
-        }
-
-        public String getMatch() {
-            return match;
-        }
-
-        public void setMatch(String match) {
-            this.match = match;
-        }
-
-        public boolean produz(String lexema) {
-            return lexema.matches(match);
-        }
-
-    }
-
 }

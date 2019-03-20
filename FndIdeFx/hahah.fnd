@@ -1,6 +1,1 @@
-begin
-    int a2 = 1, b = 0, c = 3;
-    while(a < b){ // var 'a' nao definida
-        b = b+1;
-    }
-end
+e

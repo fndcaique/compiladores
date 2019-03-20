@@ -5,14 +5,14 @@
  */
 package fndidefx;
 
+import fndidefx.compilador.Token;
+import static fndidefx.compilador.Token.TokenType.*;
 import java.util.Scanner;
-import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 /**
  *
@@ -38,7 +38,7 @@ public class FndIdeFx extends Application {
     public static void main(String[] args) {
 
         launch(args);
-        
+        //System.out.println(BEGIN.name());
         System.exit(0);
     }
 

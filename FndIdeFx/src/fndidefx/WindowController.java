@@ -8,6 +8,7 @@ package fndidefx;
 import com.jfoenix.controls.JFXButton;
 import fndidefx.compilador.AnaliseLexica;
 import fndidefx.compilador.AnaliseSintatica;
+import fndidefx.compilador.Erro;
 import fndidefx.compilador.Token;
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -25,6 +26,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.logging.Level;
@@ -34,6 +36,7 @@ import java.util.regex.Pattern;
 import javafx.event.EventHandler;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -85,6 +88,16 @@ public class WindowController implements Initializable {
     private TableColumn<String, String> colValue;
     @FXML
     private TextArea txLog;
+    @FXML
+    private MenuItem itopen;
+    @FXML
+    private MenuItem itnew;
+    @FXML
+    private MenuItem itsave;
+    @FXML
+    private MenuItem itsaveas;
+    @FXML
+    private MenuItem itcompile;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -93,8 +106,8 @@ public class WindowController implements Initializable {
         disable(true);
         startEventClose();
     }
-    
-    private void startEventClose(){
+
+    private void startEventClose() {
         new Thread(() -> {
             try {
                 Thread.sleep(2000); // 2 segundos
@@ -104,8 +117,8 @@ public class WindowController implements Initializable {
             ((Stage) btnew.getScene().getWindow()).setOnCloseRequest(closeWindow());
         }).start();
     }
-    
-    private void disable(boolean v){
+
+    private void disable(boolean v) {
         codearea.setDisable(v);
         btcompile.setDisable(v);
         btsave.setDisable(v);
@@ -149,7 +162,7 @@ public class WindowController implements Initializable {
 
     private static final String[] KEYWORDS = {"begin", "end"},
             KEYTYPES = {"int", "double", "exp"},
-            KEYCOMMAND = {"if", "else", "while", "do"};
+            KEYCOMMAND = {"if", "else", "while", "for"};
 
     private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
     private static final String TYPES_PATTERN = "\\b(" + String.join("|", KEYTYPES) + ")\\b";
@@ -191,6 +204,7 @@ public class WindowController implements Initializable {
                     : matcher.group("COMMENT") != null ? "comment"
                     : null;
 
+            //System.out.println(styleClass+", start:"+matcher.start()+", lastKwEnd:"+lastKwEnd+", end:"+matcher.end());
             //* never happens */ assert styleClass != null;
             spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
             spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
@@ -333,14 +347,26 @@ public class WindowController implements Initializable {
     @FXML
     private void clkCompile(ActionEvent event) {
         clkSave(event);
-        System.out.println("compilando...");
-        analex = new AnaliseLexica(codearea.getText());
-        Token tk = analex.nextToken();
-        while (tk != null) {
-            System.out.println("Linha = " + (tk.getLinha() + 1) + ", Token:" + tk.getName() + ", Lexema:" + tk.getLexema());
-            tk = analex.nextToken();
+        txLog.clear();
+        if (file != null) {
+            System.out.println("compilando...");
+            analex = new AnaliseLexica(codearea.getText());
+            Token tk = analex.nextToken();
+            while (tk != null) {
+                System.out.println("Linha = " + (tk.getLinha() + 1) + ", Token:" + tk.getName() + ", Lexema:\'" + tk.getLexema() + '\'');
+                tk = analex.nextToken();
+            }
+
+            System.out.println("#########################################33");
+
+            anasin = new AnaliseSintatica(codearea.getText());
+            ArrayList<Erro> le = anasin.start();
+            for (Erro e : le) {
+                System.out.println("Linha:" + (e.getLine() + 1) + ", " + e.getMsg());
+                txLog.appendText("Linha:" + (e.getLine() + 1) + ", " + e.getMsg()+"\n");
+            }
+            System.out.println("COMPILADO");
         }
-        System.out.println("COMPILADO");
     }
 
     private void markChange() {
@@ -354,8 +380,9 @@ public class WindowController implements Initializable {
     @FXML
     private void clkCodeExample(ActionEvent event) {
         saveChanges();
-        open(new File("codeexample.fnd"));
-        tabcode.setText("Sem Título");
+        open((file = new File("codeexample.fnd")));
+        disable(false);
+
     }
 
     private EventHandler<WindowEvent> closeWindow() {

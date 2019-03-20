@@ -27,12 +27,12 @@
               <menus>
                 <Menu mnemonicParsing="false" text="Arquivo">
                   <items>
-                    <MenuItem mnemonicParsing="false" onAction="#clkOpen" text="Abrir">
+                    <MenuItem fx:id="itopen" mnemonicParsing="false" onAction="#clkOpen" text="Abrir">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
                         </MenuItem>
-                        <MenuItem mnemonicParsing="false" onAction="#clkNew" text="Novo">
+                        <MenuItem fx:id="itnew" mnemonicParsing="false" onAction="#clkNew" text="Novo">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
@@ -43,18 +43,18 @@
                            </accelerator>
                         </MenuItem>
                         <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem mnemonicParsing="false" onAction="#clkSave" text="Salvar">
+                        <MenuItem fx:id="itsave" mnemonicParsing="false" onAction="#clkSave" text="Salvar">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
                         </MenuItem>
-                        <MenuItem mnemonicParsing="false" onAction="#clkSaveAs" text="Salvar como...">
+                        <MenuItem fx:id="itsaveas" mnemonicParsing="false" onAction="#clkSaveAs" text="Salvar como...">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="DOWN" shortcut="UP" />
                            </accelerator>
                         </MenuItem>
                         <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem mnemonicParsing="false" onAction="#clkCompile" text="Compilar">
+                        <MenuItem fx:id="itcompile" mnemonicParsing="false" onAction="#clkCompile" text="Compilar">
                            <accelerator>
                               <KeyCodeCombination alt="ANY" code="F9" control="UP" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
@@ -123,7 +123,7 @@
                         <TextArea fx:id="txLog" editable="false" focusTraversable="false" prefHeight="200.0" prefWidth="200.0" />
                      </content>
                   </Tab>
-                  <Tab closable="false" text="Variáveis">
+                  <Tab closable="false" disable="true" text="Variáveis">
                      <content>
                         <TableView fx:id="tbvVars" focusTraversable="false" prefHeight="161.0" prefWidth="288.0">
                           <columns>

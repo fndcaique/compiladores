@@ -1,4 +1,4 @@
-t_start = t_begin, {t_cmd_var}+, {t_cmd}+, t_end
+t_start = t_begin, t_cmd_var, t_cmd, t_end
 
 t_begin = "begin"
 
@@ -6,7 +6,7 @@ t_end = "end"
 
 t_ponto_virgula = ";"
 
-t_cmd_var = (t_tipo_var, {t_definir_var}+)
+t_cmd_var = (t_tipo_var, t_definir_var, t_ponto_virgula) [t_cmd_var]
 
 t_tipo_var = (t_int | t_double | t_exp)
 
@@ -22,8 +22,8 @@ t_virgula = ","
 
 t_id_var = t_letra, {t_algarismo | t_letra}*
 
-t_cmd = (t_cmd_dowhile | t_atribuicao | t_inc_dec), t_ponto_virgula) |
-	(t_cmd_if | t_cmd_while)
+t_cmd = (t_atribuicao, t_ponto_virgula) |
+	(t_cmd_if | t_cmd_while | t_cmd_for) [t_cmd]
 
 t_cmd_if = t_if, t_abre_parenteses, t_bool, t_fecha_parenteses, t_abre_chaves, t_cmd, t_fecha_chaves [t_cmd_else]
 
@@ -39,9 +39,11 @@ t_if = "if"
 
 t_bool =  (t_not, tbool) |
 	(t_abre_parenteses, t_bool, t_fecha_parenteses) |
-	(t_bool | t_valor | t_id_var) |
-	((t_valor | t_id_var | t_bool), (t_and_or |
-		t_operador_relacional), (t_valor | t_id_var| t_bool))
+	(	(t_valor | operacao_aritmetica | t_id_var | t_bool),
+		t_operador_relacional,
+		(t_valor | operacao_aritmetica | t_id_var| t_bool)
+	)
+	[t_and_or, t_bool]
 
 t_operador_relacional = ( t_menor | t_maior | t_igual | t_menor_igual | t_maior_igual | t_diferente)
 
@@ -73,7 +75,7 @@ t_cmd_while = t_while, t_abre_parenteses, t_bool, t_fecha_parenteses, t_abre_cha
 
 t_while = "while"
 
-t_cmd_dowhile = t_do, t_cmd, t_while, t_abre_parenteses, t_bool, t_fecha_parenteses
+t_cmd_for = t_for, t_abre_parentese, [atribuicao], t_ponto_virgula, t_bool, t_ponto_virgula, [t_atribuicao], t_fecha_parenteses, t_abre_chave, t_cmd, t_fecha_chave
 
 t_do = "do"
 
@@ -86,7 +88,7 @@ t_letra_maiuscula = "A"-"Z"
 t_algarismo = "0"-"9"
 
 
-t_valor = t_valor_int | t_valor_double | t_valor_exp | t_operacao_aritmetica
+t_valor = t_valor_int | t_valor_double | t_valor_exp
 
 t_valor_int = {t_algarismo}+
 
@@ -100,12 +102,6 @@ t_e = "e"
 
 t_operador_aritmetico = (t_mais | t_menos | t_mult | t_div )
 
-t_inc_dec = t_id_var, (t_incremento|t_decremento)
-
-t_incremento = "++"
-
-t_decremento = "--"
-
 t_mais = "+"
 
 t_menos = "-"
@@ -116,8 +112,8 @@ t_div  = "/"
 
 t_atribuidor = “=”
 
-t_atribuicao = t_id_var, t_atribuidor, (t_id_var | t_valor)
+t_atribuicao = t_id_var, t_atribuidor, (t_id_var | t_valor | t_operacao_aritmetica)
 
 t_operacao_aritmetica = ((t_abre_parenteses, t_operacao_aritmetica, t_fecha_parenteses)|
-	((t_valor | t_id_var), t_operador_aritmetico, (t_valor |
-		t_id_var))) [operador_aritmetico, t_operacao_aritmetica]
+	((t_valor | t_id_var | t_operacao_aritmetica), t_operador_aritmetico, (t_valor |
+		t_id_var | t_operacao_aritmetica))) [operador_aritmetico, (t_valor, id_var | t_operacao_aritmetica)]

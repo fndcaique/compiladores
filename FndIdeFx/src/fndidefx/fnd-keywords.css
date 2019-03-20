@@ -5,6 +5,10 @@
     -fx-fill: white;
 }
 
+.code-area .caret{
+    -fx-stroke: white;
+}
+
 .code-area .text{ /*texto do code area*/
     -fx-fill: lightgrey;
 }
