@@ -6,10 +6,12 @@
 package fndidefx;
 
 import com.jfoenix.controls.JFXButton;
-import fndidefx.compilador.AnaliseLexica;
-import fndidefx.compilador.AnaliseSintatica;
-import fndidefx.compilador.Erro;
-import fndidefx.compilador.Token;
+import fndidefx.model.AnaliseLexica;
+import fndidefx.model.AnaliseSintatica;
+import fndidefx.model.Erro;
+import fndidefx.model.Simbolo;
+import fndidefx.model.TabelaSimbolos;
+import fndidefx.model.Token;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.net.URL;
@@ -33,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.event.EventHandler;
 
 import javafx.scene.control.Button;
@@ -79,14 +82,6 @@ public class WindowController implements Initializable {
     @FXML
     private Tab tabcode;
     @FXML
-    private TableView<?> tbvVars;
-    @FXML
-    private TableColumn<String, String> colId;
-    @FXML
-    private TableColumn<String, String> colType;
-    @FXML
-    private TableColumn<String, String> colValue;
-    @FXML
     private TextArea txLog;
     @FXML
     private MenuItem itopen;
@@ -98,12 +93,26 @@ public class WindowController implements Initializable {
     private MenuItem itsaveas;
     @FXML
     private MenuItem itcompile;
+    @FXML
+    private TableColumn<Simbolo, String> colLexema;
+    @FXML
+    private TableColumn<Simbolo, String> colToken;
+    @FXML
+    private TableColumn<Simbolo, String> colLinha;
+    @FXML
+    private TableColumn<Simbolo, String> colValor;
+    @FXML
+    private TableView<Simbolo> tbvsimbolos;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         initializeCodeArea();
-        tabcode.setContent(stackpane);
         disable(true);
+        colLexema.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getId()));
+        colToken.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTipo()));
+        colLinha.setCellValueFactory(c -> new SimpleStringProperty((c.getValue().getLinha() + 1) + ""));
+        colValor.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getValor()));
+
         startEventClose();
     }
 
@@ -145,6 +154,7 @@ public class WindowController implements Initializable {
         virtscrollpane = new VirtualizedScrollPane(codearea);
         stackpane = new StackPane(virtscrollpane);
         codearea.setOnKeyTyped(codeAreaKeyTyped());
+        tabcode.setContent(stackpane);
     }
 
     private EventHandler<KeyEvent> codeAreaKeyTyped() {
@@ -271,8 +281,8 @@ public class WindowController implements Initializable {
         if (file != null) {
             if (codechanged) {
                 lastLine();
-                save(file, codearea.getText());
             }
+            save(file, codearea.getText());
         } else {
             clkSaveAs(event);
         }
@@ -285,7 +295,12 @@ public class WindowController implements Initializable {
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text File", "*.fnd"));
         File newfile = fc.showSaveDialog(null);
         if (newfile != null) {
+
             file = newfile;
+            System.out.println(file.getName());
+            if (!file.getName().endsWith(".fnd")) {
+                file = new File(file.getPath() + ".fnd");
+            }
             lastLine();
             save(file, codearea.getText());
         }
@@ -349,23 +364,35 @@ public class WindowController implements Initializable {
         clkSave(event);
         txLog.clear();
         if (file != null) {
+            /* // trecho de codigo para remover linha pintada de vermelho
+            String text = codearea.getText();
+            initializeCodeArea(); 
+            codearea.appendText(text);*/
+            tbvsimbolos.getItems().clear();
+
             System.out.println("compilando...");
-            analex = new AnaliseLexica(codearea.getText());
-            Token tk = analex.nextToken();
-            while (tk != null) {
-                System.out.println("Linha = " + (tk.getLinha() + 1) + ", Token:" + tk.getName() + ", Lexema:\'" + tk.getLexema() + '\'');
-                tk = analex.nextToken();
-            }
 
             System.out.println("#########################################33");
 
             anasin = new AnaliseSintatica(codearea.getText());
-            ArrayList<Erro> le = anasin.start();
-            for (Erro e : le) {
-                System.out.println("Linha:" + (e.getLine() + 1) + ", " + e.getMsg());
-                txLog.appendText("Linha:" + (e.getLine() + 1) + ", " + e.getMsg()+"\n");
+
+            ArrayList<Erro> le = null;
+
+            try {
+                le = anasin.start();
+            } catch (Exception e) {
+                le = null;
+                System.out.println("erro de compilação:\n" + e);
+            }
+            if (le != null) {
+                for (Erro e : le) {
+                    System.out.println("Linha:" + (e.getLinha() + 1) + ", " + e.getMsg());
+                    //codearea.setParagraphStyle(e.getLine(), Collections.singleton("error")); // pinta linha do erro
+                    txLog.appendText("Linha:" + (e.getLinha() + 1) + ", " + e.getMsg() + "\n");
+                }
             }
             System.out.println("COMPILADO");
+
         }
     }
 

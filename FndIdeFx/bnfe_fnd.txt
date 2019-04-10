@@ -37,7 +37,7 @@ t_fecha_chaves = "}"
 
 t_if = "if"
 
-t_bool =  (t_not, tbool) |
+t_bool =  (t_not, t_abre_parenteses, tbool, t_fecha_parenteses) |
 	(t_abre_parenteses, t_bool, t_fecha_parenteses) |
 	(	(t_valor | operacao_aritmetica | t_id_var | t_bool),
 		t_operador_relacional,
@@ -116,4 +116,4 @@ t_atribuicao = t_id_var, t_atribuidor, (t_id_var | t_valor | t_operacao_aritmeti
 
 t_operacao_aritmetica = ((t_abre_parenteses, t_operacao_aritmetica, t_fecha_parenteses)|
 	((t_valor | t_id_var | t_operacao_aritmetica), t_operador_aritmetico, (t_valor |
-		t_id_var | t_operacao_aritmetica))) [operador_aritmetico, (t_valor, id_var | t_operacao_aritmetica)]
+		t_id_var | t_operacao_aritmetica))) [operador_aritmetico, (t_valor| id_var | t_operacao_aritmetica)]

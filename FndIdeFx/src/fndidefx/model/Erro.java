@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fndidefx.compilador;
+package fndidefx.model;
 
 /**
  *
@@ -18,11 +18,11 @@ public class Erro {
         this.msg = msg;
     }
 
-    public int getLine() {
+    public int getLinha() {
         return line;
     }
 
-    public void setLine(int line) {
+    public void setLinha(int line) {
         this.line = line;
     }
 

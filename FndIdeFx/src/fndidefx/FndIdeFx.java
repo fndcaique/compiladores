@@ -5,8 +5,8 @@
  */
 package fndidefx;
 
-import fndidefx.compilador.Token;
-import static fndidefx.compilador.Token.TokenType.*;
+import fndidefx.model.Token;
+import static fndidefx.model.Token.TokenType.*;
 import java.util.Scanner;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

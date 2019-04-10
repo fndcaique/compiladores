@@ -59,3 +59,8 @@ number{
 .paragraph-box:has-caret { /*linha do cursor |*/
     -fx-background-color: #444444;
 }
+
+.error{
+    -fx-background-color: red;
+    
+}

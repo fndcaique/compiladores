@@ -5,8 +5,9 @@
  */
 package testes;
 
-import fndidefx.compilador.AnaliseLexica;
-import fndidefx.compilador.Token;
+import fndidefx.model.AnaliseLexica;
+import fndidefx.model.Simbolo;
+import fndidefx.model.Token;
 import junit.framework.Assert;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -56,33 +57,33 @@ public class TAnaliseLexica {
                 + "end";
         
         AnaliseLexica al = new AnaliseLexica((code));
-        Assert.assertEquals("t_begin",al.nextToken().getName());
-        Assert.assertEquals("t_int",al.nextToken().getName());
-        Assert.assertEquals("t_id_var",al.nextToken().getName());
-        Assert.assertEquals("t_atribuidor",al.nextToken().getName());
-        Assert.assertEquals("t_valor_int",al.nextToken().getName());
-        Assert.assertEquals("t_while",al.nextToken().getName());
-        Assert.assertEquals("t_abre_parenteses",al.nextToken().getName());
-        Assert.assertEquals("t_id_var",al.nextToken().getName());
-        Assert.assertEquals("t_menor",al.nextToken().getName());
-        Assert.assertEquals("t_valor_int",al.nextToken().getName());
-        Assert.assertEquals("t_fecha_parenteses",al.nextToken().getName());
-        Assert.assertEquals("t_abre_chaves",al.nextToken().getName());
-        Assert.assertEquals("t_id_var",al.nextToken().getName());
-        Assert.assertEquals("t_atribuidor",al.nextToken().getName());
-        Assert.assertEquals("t_id_var",al.nextToken().getName());
-        Assert.assertEquals("t_mais",al.nextToken().getName());
-        Assert.assertEquals("t_id_var",al.nextToken().getName());
-        Assert.assertEquals("t_fecha_chaves",al.nextToken().getName());
-        Assert.assertEquals("t_end",al.nextToken().getName());
+        Assert.assertEquals("t_begin",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_int",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_id_var",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_atribuidor",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_valor_int",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_while",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_abre_parenteses",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_id_var",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_menor",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_valor_int",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_fecha_parenteses",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_abre_chaves",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_id_var",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_atribuidor",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_id_var",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_mais",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_id_var",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_fecha_chaves",al.nextSimbolo().getTipo());
+        Assert.assertEquals("t_end",al.nextSimbolo().getTipo());
     }
     
     @Test
-    public void testeCoemment(){
+    public void testeComment(){
         String code = "/* ekryfb71234!@#$%*() */";
         AnaliseLexica ana = new AnaliseLexica(code);
-        Token tk = ana.nextToken();
+        Simbolo tk = ana.nextSimbolo();
         Assert.assertNotNull(tk);
-        Assert.assertEquals("t_abre_comment", tk.getName());
+        Assert.assertEquals("t_abre_comment", tk.getTipo());
     }
 }

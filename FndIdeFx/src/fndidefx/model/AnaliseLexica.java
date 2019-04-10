@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fndidefx.compilador;
+package fndidefx.model;
 
-import fndidefx.compilador.Token.TokenType;
+import fndidefx.model.Token.TokenType;
 import java.util.ArrayList;
 
 /**
@@ -173,7 +173,7 @@ public class AnaliseLexica {
         return i;
     }
 
-    public Token nextToken() {
+    public Simbolo nextSimbolo() {
 
         if (finalisado) {
             return null;
@@ -187,7 +187,7 @@ public class AnaliseLexica {
             removerEspacosInicio();
             if (text.isEmpty()) {
                 finalisado = true;
-                return new Token(TokenType.FIM.name(), "$", linha);
+                return new Simbolo("$", TokenType.FIM.name(), linha);
             }
             fim = 0;
             tk = null;
@@ -236,8 +236,8 @@ public class AnaliseLexica {
         } while (continuar);
         if (tk == null) {
             erros.add(new Erro(linha, ERROR + " = " + lex));
-            return new Token(TokenType.ERRO_LEXICO.name(), lex, linha);
+            return new Simbolo(lex, TokenType.ERRO_LEXICO.name(), linha);
         }
-        return new Token(tk.name(), lex, linha);
+        return new Simbolo(lex, tk.name(), linha);
     }
 }
