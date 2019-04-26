@@ -5,8 +5,10 @@
  */
 package fndidefx;
 
+import fndidefx.model.Simbolo;
 import fndidefx.model.Token;
 import static fndidefx.model.Token.TokenType.*;
+import fndidefx.model.Var;
 import java.util.Scanner;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -39,6 +41,10 @@ public class FndIdeFx extends Application {
 
         launch(args);
         //System.out.println(BEGIN.name());
+        Simbolo s = new Var("id", "tk", "valor", 0);
+        if (s instanceof Var) { // sem o if da erro
+            System.out.println("Utilizada = " + ((Var) s).getUtilizada());
+        }
         System.exit(0);
     }
 

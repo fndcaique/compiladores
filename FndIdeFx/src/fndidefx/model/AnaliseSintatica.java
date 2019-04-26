@@ -22,14 +22,17 @@ public class AnaliseSintatica {
     private ArrayList<Simbolo> arrtokens;
     private int proximo, anterior;
     private Linguagem ling;
+    private TabelaSimbolos tablesimb;
+    private Simbolo rec;
 
     public AnaliseSintatica(String code) {
+        tablesimb = new TabelaSimbolos();
         anterior = -1;
         proximo = 0;
         arrtokens = new ArrayList<>();
         ling = Linguagem.getInstace();
         analex = new AnaliseLexica(code);
-        
+
 //
 //        Token t = analex.nextSimbolo();
 //        while (t != null) {
@@ -41,11 +44,7 @@ public class AnaliseSintatica {
         tknext = arrtokens.get(proximo);
 
         erros = new ArrayList<>();
-        
-    }
 
-    public TabelaSimbolos getTabelaSimbolos(){
-        return ling.getTabelaSimbolos();
     }
 
     private void next() {
@@ -55,8 +54,13 @@ public class AnaliseSintatica {
         anterior++;
         proximo++;
         tknext = proximo < arrtokens.size() ? arrtokens.get(proximo) : null;
-        
-        ling.getTabelaSimbolos().add(tk);
+        if (tablesimb.search(tk) != null) { // já utilizada
+            if (tk.getToken().equals(ID_VAR.name())) {
+                //tk.setUtilizada(tk.getUtilizada() + 1);
+            }
+        } else {
+            tablesimb.add(tk);
+        }
     }
 
     private void previus() {
@@ -69,13 +73,13 @@ public class AnaliseSintatica {
     }
 
     private void pularComando() {
-        if (!(ling.isFirst("tipo_var", tk.getTipo()) || ling.isFirst("valor", tk.getTipo()) || ling.isFirst("cmd", tk.getTipo()))) {
+        if (!(ling.isFirst("tipo_var", tk.getToken()) || ling.isFirst("valor", tk.getToken()) || ling.isFirst("cmd", tk.getToken()))) {
             next();
         }
     }
 
     private boolean erroLexico() {
-        return tk.getTipo().equals(ERRO_LEXICO.name());
+        return tk.getToken().equals(ERRO_LEXICO.name());
     }
 
     private ArrayList<Erro> join(ArrayList<Erro> a, ArrayList<Erro> b) {
@@ -110,9 +114,8 @@ public class AnaliseSintatica {
         return join(analex.getErros(), erros);
     }
 
-    
     private boolean idVar() {
-        if (tk.getTipo().equals(ID_VAR.name()) || erroLexico()) {
+        if (tk.getToken().equals(ID_VAR.name()) || erroLexico()) {
             next();
         } else {
             erros.add(new Erro(tk.getLinha(), "'" + tk.getId() + "', não é um id de variavel"));
@@ -123,7 +126,7 @@ public class AnaliseSintatica {
     }
 
     private boolean atribuidor() {
-        if (tk.getTipo().equals(ATRIBUIR.name()) || erroLexico()) {
+        if (tk.getToken().equals(ATRIBUIR.name()) || erroLexico()) {
             next();
         } else {
             erros.add(new Erro(tk.getLinha(), "ERRO_ATRIBUIR: Esperado = '=', Obtido = '" + tk.getId() + "'"));
@@ -134,16 +137,16 @@ public class AnaliseSintatica {
     }
 
     private boolean bool() {
-        if (ling.isFirst("bool", tk.getTipo()) || erroLexico()) {
-            if (tk.getTipo().equals(NOT.name()) || erroLexico()) {
+        if (ling.isFirst("bool", tk.getToken()) || erroLexico()) {
+            if (tk.getToken().equals(NOT.name()) || erroLexico()) {
                 next();
                 if (!bool()) {
                     return false;
                 }
-            } else if (tk.getTipo().equals(ABRE_PARENTESE.name()) || erroLexico()) {
+            } else if (tk.getToken().equals(ABRE_PARENTESE.name()) || erroLexico()) {
                 next();
                 if (bool()) {
-                    if (tk.getTipo().equals(FECHA_PARENTESE.name()) || erroLexico()) {
+                    if (tk.getToken().equals(FECHA_PARENTESE.name()) || erroLexico()) {
                         next();
                     } else {
                         erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = ')', Obtido = " + tk.getId()));
@@ -153,9 +156,12 @@ public class AnaliseSintatica {
                     return false;
                 }
             } else { // id_var ou valor
-                if (ling.isFirst("operador_relacional", tknext.getTipo())) {
+                if (tk.getToken().equals(ID_VAR)) {
+                    //tk.setUtilizada(tk.getUtilizada() + 1);
+                }
+                if (ling.isFirst("operador_relacional", tknext.getToken())) {
                     next();
-                    if (ling.isFirst("operador_relacional", tk.getTipo()) || erroLexico()) {
+                    if (ling.isFirst("operador_relacional", tk.getToken()) || erroLexico()) {
                         next();
                     } else {
                         erros.add(new Erro(tk.getLinha(),
@@ -164,10 +170,10 @@ public class AnaliseSintatica {
 
                         return false;
                     }
-                } else if (ling.isFirst("operador_aritmetico", tknext.getTipo())) {
+                } else if (ling.isFirst("operador_aritmetico", tknext.getToken())) {
                     operacaoAritmetica();
                 }
-                if (ling.isFirst("valor", tk.getTipo()) || tk.getTipo().equals(ID_VAR.name()) || erroLexico()) {
+                if (ling.isFirst("valor", tk.getToken()) || tk.getToken().equals(ID_VAR.name()) || erroLexico()) {
                     next();
                 } else {
                     erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VALOR, VALOR}, Obtido = " + tk.getId()));
@@ -175,7 +181,7 @@ public class AnaliseSintatica {
                     return false;
                 }
             }
-            if (ling.isFirst("and_or", tk.getTipo())) {
+            if (ling.isFirst("and_or", tk.getToken())) {
                 next();
                 bool();
             }
@@ -187,33 +193,32 @@ public class AnaliseSintatica {
         return true;
     }
 
-    private boolean atribuicao() {
+    private String atribuicao() {
+        String saida = "";
+        rec = tk;
         next();
         if (atribuidor()) {
-            if (ling.isFirst("operador_aritmetico", tknext.getTipo())) {
-                if (!operacaoAritmetica()) {
-                    return false;
-                }
-            } else if (ling.isFirst("valor", tk.getTipo()) || ID_VAR.name().equals(tk.getTipo())) {
+            if (ling.isFirst("operador_aritmetico", tknext.getToken())) {
+                saida = operacaoAritmetica();
+            } else if (ling.isFirst("valor", tk.getToken()) || ID_VAR.name().equals(tk.getToken())) {
                 next();
             } else {
                 erros.add(new Erro(tk.getLinha(), "ERRO_ATRIBUICAO: Esperado = {ID_VAR, VALOR}, Obtido = " + tk.getId()));
-                return false;
             }
         } else {
-            return false;
+            erros.add(new Erro(tk.getLinha(), "ERRO_ATRIBUICAO: Esperado = '=', Obtido = " + tk.getId()));
         }
-        return true;
+        return saida;
     }
 
     private void cmdFor() {
-        if (FOR.name().equals(tk.getTipo())) {
+        if (FOR.name().equals(tk.getToken())) {
             next();
             boolean errocabecalho = false;
-            if (ABRE_PARENTESE.name().equals(tk.getTipo()) || erroLexico()) {
+            if (ABRE_PARENTESE.name().equals(tk.getToken()) || erroLexico()) {
                 next();
-                if (ID_VAR.name().equals(tk.getTipo())) { // opcional
-                    if (!atribuicao()) {
+                if (ID_VAR.name().equals(tk.getToken())) { // opcional
+                    if (atribuicao().isEmpty()) {
                         errocabecalho = true;
                     }
                 }
@@ -225,13 +230,13 @@ public class AnaliseSintatica {
                     } else if (!pontoVirgula()) {
                         errocabecalho = true;
                     } else {
-                        if (ID_VAR.name().equals(tk.getTipo())) { // opcional
-                            if (!atribuicao()) {
+                        if (ID_VAR.name().equals(tk.getToken())) { // opcional
+                            if (atribuicao().isEmpty()) {
                                 errocabecalho = true;
                             }
                         }
                         if (!errocabecalho) {
-                            if (FECHA_PARENTESE.name().equals(tk.getTipo()) || erroLexico()) {
+                            if (FECHA_PARENTESE.name().equals(tk.getToken()) || erroLexico()) {
                                 next();
                             } else {
                                 erros.add(new Erro(tk.getLinha(), "ERRO_FOR: Esperado = ')' , Obtido = " + tk.getId()));
@@ -253,16 +258,16 @@ public class AnaliseSintatica {
     }
 
     private void procurarBlocoComando() {
-        while (!tk.getTipo().equals(ABRE_CHAVE.name())) {
+        while (!tk.getToken().equals(ABRE_CHAVE.name())) {
             next();
         }
     }
 
     private boolean blocoComando() {
-        if (tk.getTipo().equals(ABRE_CHAVE.name()) || erroLexico()) {
+        if (tk.getToken().equals(ABRE_CHAVE.name()) || erroLexico()) {
             next();
             cmd();
-            if (tk.getTipo().equals(FECHA_CHAVE.name()) || erroLexico()) {
+            if (tk.getToken().equals(FECHA_CHAVE.name()) || erroLexico()) {
                 next();
             } else {
                 erros.add(new Erro(tk.getLinha(), "ERRO_BLOCO_COMANDO: Esperado = '}', Obtido = " + tk.getId()));
@@ -278,7 +283,7 @@ public class AnaliseSintatica {
     }
 
     private boolean condicao() {
-        if (tk.getTipo().equals(ABRE_PARENTESE.name()) || erroLexico()) {
+        if (tk.getToken().equals(ABRE_PARENTESE.name()) || erroLexico()) {
             next();
         } else {
             erros.add(new Erro(tk.getLinha(), "ERRO_CONDICAO: Esperado = '(', Obtido = " + tk.getId()));
@@ -286,7 +291,7 @@ public class AnaliseSintatica {
             return false;
         }
         if (bool()) {
-            if (tk.getTipo().equals(FECHA_PARENTESE.name()) || erroLexico()) {
+            if (tk.getToken().equals(FECHA_PARENTESE.name()) || erroLexico()) {
                 next();
             } else {
                 erros.add(new Erro(tk.getLinha(), "ERRO_CONDICAO: Esperado = ')', Obtido = " + tk.getId()));
@@ -300,7 +305,7 @@ public class AnaliseSintatica {
     }
 
     private boolean pontoVirgula() {
-        if (tk.getTipo().equals(PONTO_VIRGULA.name()) || erroLexico()) {
+        if (tk.getToken().equals(PONTO_VIRGULA.name()) || erroLexico()) {
             next();
         } else {
             erros.add(new Erro(tk.getLinha(), "ERRO_PONTO_VIRGULA: Esperado = ';', Obtido = " + tk.getId()));
@@ -316,9 +321,9 @@ public class AnaliseSintatica {
             procurarBlocoComando();
         }
         blocoComando();
-        if (tk.getTipo().equals(ELSE.name())) { // opcional
+        if (tk.getToken().equals(ELSE.name())) { // opcional
             next();
-            if (tk.getTipo().equals(IF.name())) { // opcional
+            if (tk.getToken().equals(IF.name())) { // opcional
                 cmdIf();
             } else {
                 blocoComando();
@@ -331,25 +336,25 @@ public class AnaliseSintatica {
     }
 
     private boolean cmd() {
-        String name = tk.getTipo();
+        String name = tk.getToken();
         do {
-            if (erroLexico() || tk.getTipo().equals(PONTO_VIRGULA.name())) {
+            if (erroLexico() || tk.getToken().equals(PONTO_VIRGULA.name())) {
                 while (erroLexico()) {
                     next();
                 }
             } else if (name.equals(ID_VAR.name())) { // atribuicao
                 boolean erro = false;
-                if (!atribuicao()) {
+                if (atribuicao().isEmpty()) {
                     erro = true;
                 } else if (!pontoVirgula()) {
                     erro = true;
                 }
                 if (erro) {
-                    while (!tk.getTipo().equals(PONTO_VIRGULA.name()) // para pegar algum outro erro como 2 = 2;
-                            && !(ling.isFirst("cmd", tk.getTipo()) && !tk.getTipo().equals(ID_VAR.name()))) {
+                    while (!tk.getToken().equals(PONTO_VIRGULA.name()) // para pegar algum outro erro como 2 = 2;
+                            && !(ling.isFirst("cmd", tk.getToken()) && !tk.getToken().equals(ID_VAR.name()))) {
                         next();
                     }
-                    if (tk.getTipo().equals(PONTO_VIRGULA.name())) {
+                    if (tk.getToken().equals(PONTO_VIRGULA.name())) {
                         next();
                     }
                 }
@@ -366,32 +371,32 @@ public class AnaliseSintatica {
             } else { // erro
                 erros.add(new Erro(tk.getLinha(), "ERRO_COMANDO: Esperado = {'if','while','for',ID_VAR}, Obtido = '" + tk.getId() + "'"));
                 verificaProximoToken();
-                while (!ling.isFirst("cmd", tk.getTipo()) && !tk.getTipo().equals(END.name()) &&
-                        !tk.getTipo().equals(FECHA_CHAVE.name())){
+                while (!ling.isFirst("cmd", tk.getToken()) && !tk.getToken().equals(END.name())
+                        && !tk.getToken().equals(FECHA_CHAVE.name())) {
                     next();
                 }
             }
-            name = tk.getTipo();
+            name = tk.getToken();
         } while (ling.isFirst("cmd", name));
         return true;
     }
 
     private void pontoConfianca() {
         do {
-            if (tk.getTipo().equals(ID_VAR.name()) && !tknext.getTipo().equals(ATRIBUIR.name())) {
+            if (tk.getToken().equals(ID_VAR.name()) && !tknext.getToken().equals(ATRIBUIR.name())) {
                 next();
             }
-            while (!(ling.isFirst("cmd", tk.getTipo()) || END.name().equals(tk.getTipo())
-                    || ABRE_CHAVE.name().equals(tk.getTipo()) || FECHA_CHAVE.name().equals(tk.getTipo()))) {
+            while (!(ling.isFirst("cmd", tk.getToken()) || END.name().equals(tk.getToken())
+                    || ABRE_CHAVE.name().equals(tk.getToken()) || FECHA_CHAVE.name().equals(tk.getToken()))) {
                 next();
             }
-            System.out.println("pontoConfianca = " + tk.getId() + ", " + tk.getTipo());
-        } while (!END.name().equals(tk.getTipo()) && tk.getTipo().equals(ID_VAR.name()) && !tknext.getTipo().equals(ATRIBUIR.name()));
+            System.out.println("pontoConfianca = " + tk.getId() + ", " + tk.getToken());
+        } while (!END.name().equals(tk.getToken()) && tk.getToken().equals(ID_VAR.name()) && !tknext.getToken().equals(ATRIBUIR.name()));
 
     }
 
     private void operadorAritmetico() {
-        if (ling.isFirst("operador_aritmetico", tk.getTipo())) {
+        if (ling.isFirst("operador_aritmetico", tk.getToken())) {
             next();
         } else {
 
@@ -400,78 +405,65 @@ public class AnaliseSintatica {
         }
     }
 
-    private boolean operacaoAritmetica() {
-        if (ling.isFirst("operacao_aritmetica", tk.getTipo()) || erroLexico()) {
+    private String operacaoAritmetica() {
+        String saida = "";
+        if (ling.isFirst("operacao_aritmetica", tk.getToken()) || erroLexico()) {
 
-            if (ABRE_PARENTESE.name().equals(tk.getTipo())) {
+            if (ABRE_PARENTESE.name().equals(tk.getToken())) {
                 next();
-                if (!operacaoAritmetica()) {
-                    return false;
-                }
-                if (FECHA_PARENTESE.name().equals(tk.getTipo()) || erroLexico()) {
+                saida = operacaoAritmetica();
+                if (FECHA_PARENTESE.name().equals(tk.getToken()) || erroLexico()) {
                     next();
                 } else {
                     erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = ')', Obtido = " + tk.getId()));
-
-                    return false;
                 }
-            } else if (ling.isFirst("valor", tk.getTipo()) || ID_VAR.name().equals(tk.getTipo())) {
+            } else if (ling.isFirst("valor", tk.getToken())) {
+                next();
+            } else if (ID_VAR.name().equals(tk.getToken())) {
+                //if () {
+
+                //}
                 next();
             } else {
                 erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = {'(', ID_VAR, VALOR}, Obtido = " + tk.getId()));
-
-                return false;
             }
             operadorAritmetico();
-            if (ABRE_PARENTESE.name().equals(tk.getTipo())) {
+            if (ABRE_PARENTESE.name().equals(tk.getToken())) {
                 next();
-                if (!operacaoAritmetica()) {
-                    return false;
-                }
-                if (FECHA_PARENTESE.name().equals(tk.getTipo()) || erroLexico()) {
+                saida = operacaoAritmetica();
+                if (FECHA_PARENTESE.name().equals(tk.getToken()) || erroLexico()) {
                     next();
                 } else {
                     erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = ')', Obtido = " + tk.getId()));
-
-                    return false;
                 }
-            } else if (ling.isFirst("valor", tk.getTipo()) || ID_VAR.name().equals(tk.getTipo())) {
+            } else if (ling.isFirst("valor", tk.getToken()) || ID_VAR.name().equals(tk.getToken())) {
                 next();
             } else {
                 erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = {'(', ID_VAR, VALOR}, Obtido = " + tk.getId()));
-
-                return false;
             }
             // parte opcional
-            if (ling.isFirst("operador_aritmetico", tk.getTipo())) {
+            if (ling.isFirst("operador_aritmetico", tk.getToken())) {
                 next();
-                if (ling.isFirst("operador_aritmetico", tknext.getTipo()) || ABRE_PARENTESE.name().equals(tknext.getTipo())) {
-                    if (!operacaoAritmetica()) {
-                        return false;
-                    }
-                } else if (ling.isFirst("valor", tk.getTipo()) || ID_VAR.name().equals(tk.getTipo())) {
+                if (ling.isFirst("operador_aritmetico", tknext.getToken()) || ABRE_PARENTESE.name().equals(tknext.getToken())) {
+                    saida = operacaoAritmetica();
+                } else if (ling.isFirst("valor", tk.getToken()) || ID_VAR.name().equals(tk.getToken())) {
                     next();
                 } else {
                     erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = {'(', ID_VAR, VALOR}, Obtido = " + tk.getId()));
-
-                    return false;
                 }
             }
         } else {
             erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = {ID_VAR, VALOR, ABRE_PARENTES}, Obtido = " + tk.getId()));
-
-            return false;
         }
-        return true;
+        return saida;
     }
 
     private boolean valor() {
-        if (ling.isFirst("valor", tk.getTipo()) || erroLexico()) {
+        if (ling.isFirst("valor", tk.getToken()) || erroLexico()) {
             // valor int, double, ou exp
             next();
         } else {
             erros.add(new Erro(tk.getLinha(), "ERRO_VALOR: Esperado = {VALOR_INT, VALOR_DOUBLE, VALOR_EXP, ABRE_PARENTESE}, Obtido = " + tk.getId()));
-
             return false;
         }
         return true;
@@ -479,13 +471,18 @@ public class AnaliseSintatica {
 
     private void definirVar() {
         if (idVar()) {
-            // parte opcional inicializacao
-            if (tk.getTipo().equals(ATRIBUIR.name()) || erroLexico()) {
+            Simbolo s = tk;
+            //s.setDeclarada(true);
+            next();
+            // opcional: inicializacao
+            if (tk.getToken().equals(ATRIBUIR.name()) || erroLexico()) {
                 next();
-                valor();
+                if (valor()) {
+                    //s.setInicializada(true);
+                }
             }
-            // opcional, novo id
-            if (tk.getTipo().equals(VIRGULA.name()) || erroLexico()) {
+            // opcional: novo id
+            if (tk.getToken().equals(VIRGULA.name()) || erroLexico()) {
                 next();
                 definirVar();
             }
@@ -493,11 +490,11 @@ public class AnaliseSintatica {
     }
 
     private void cmdVar() {
-        if (ling.isFirst("cmd_var", tk.getTipo())) {
+        if (ling.isFirst("cmd_var", tk.getToken())) {
             next();
             definirVar();
             pontoVirgula();
-            if (ling.isFirst("cmd_var", tk.getTipo())) {
+            if (ling.isFirst("cmd_var", tk.getToken())) {
                 cmdVar();
             }
         } else {
@@ -507,7 +504,7 @@ public class AnaliseSintatica {
     }
 
     private void begin() {
-        if (tk.getTipo().equals(BEGIN.name())) {
+        if (tk.getToken().equals(BEGIN.name())) {
             next();
         } else {
             erros.add(new Erro(tk.getLinha(), "ERRO_BEGIN: Esperado = 'begin'\nObtido = \'" + tk.getId() + "'"));
@@ -516,7 +513,7 @@ public class AnaliseSintatica {
     }
 
     private void end() {
-        if (tk.getTipo().equals(END.name()) || erroLexico()) {
+        if (tk.getToken().equals(END.name()) || erroLexico()) {
             next();
         } else {
             erros.add(new Erro(tk.getLinha(), "ERRO_END: Esperado = 'end'\nObtido = " + tk.getId()));

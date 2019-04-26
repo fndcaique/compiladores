@@ -109,7 +109,7 @@ public class WindowController implements Initializable {
         initializeCodeArea();
         disable(true);
         colLexema.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getId()));
-        colToken.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTipo()));
+        colToken.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getToken()));
         colLinha.setCellValueFactory(c -> new SimpleStringProperty((c.getValue().getLinha() + 1) + ""));
         colValor.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getValor()));
 

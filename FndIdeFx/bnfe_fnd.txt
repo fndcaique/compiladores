@@ -16,7 +16,7 @@ t_double = "double"
 
 t_exp = "exp"
 
-t_definir_var = t_id_var [t_atribuidor, t_valor] [t_virgula, t_definir_var]
+t_definir_var = t_atribuicao [t_virgula, t_definir_var]
 
 t_virgula = ","
 
@@ -39,9 +39,9 @@ t_if = "if"
 
 t_bool =  (t_not, t_abre_parenteses, tbool, t_fecha_parenteses) |
 	(t_abre_parenteses, t_bool, t_fecha_parenteses) |
-	(	(t_valor | operacao_aritmetica | t_id_var | t_bool),
+	(	(t_valor_gen),
 		t_operador_relacional,
-		(t_valor | operacao_aritmetica | t_id_var| t_bool)
+		(t_valor_gen)
 	)
 	[t_and_or, t_bool]
 
@@ -87,8 +87,7 @@ t_letra_maiuscula = "A"-"Z"
 
 t_algarismo = "0"-"9"
 
-
-t_valor = t_valor_int | t_valor_double | t_valor_exp
+t_valor = (t_valor_int | t_valor_double | t_valor_exp)
 
 t_valor_int = {t_algarismo}+
 
@@ -110,10 +109,13 @@ t_mult = "*"
 
 t_div  = "/"
 
-t_atribuidor = “=”
+t_atribuidor = "="
 
-t_atribuicao = t_id_var, t_atribuidor, (t_id_var | t_valor | t_operacao_aritmetica)
+t_valor_gen = [menos] (t_valor|t_id_var|t_operacao_aritmetica)
+
+t_atribuicao = t_id_var, t_atribuidor, t_valor_gen
 
 t_operacao_aritmetica = ((t_abre_parenteses, t_operacao_aritmetica, t_fecha_parenteses)|
-	((t_valor | t_id_var | t_operacao_aritmetica), t_operador_aritmetico, (t_valor |
-		t_id_var | t_operacao_aritmetica))) [operador_aritmetico, (t_valor| id_var | t_operacao_aritmetica)]
+	(t_valor_gen, t_operador_aritmetico, t_valor_gen))|
+	operador_aritmetico, (t_valor_gen)
+	[operacao_aritmetica]

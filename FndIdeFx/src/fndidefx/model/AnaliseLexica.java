@@ -35,6 +35,7 @@ public class AnaliseLexica {
     public ArrayList<Erro> getErros() {
         return erros;
     }
+    
 
     /*
     aEb = a * (10^b)

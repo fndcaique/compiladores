@@ -10,25 +10,21 @@ package fndidefx.model;
  * @author fnd
  */
 public class Simbolo implements Comparable<Simbolo>{
-    private String id, tipo, valor;
+    private String id, token, valor;
     private int linha;
 
-    public Simbolo(String id, String tipo, String valor, int linha) {
+    public Simbolo(String id, String token, String valor, int linha) {
         this.id = id;
-        this.tipo = tipo;
+        this.token = token;
         this.valor = valor;
         this.linha = linha;
     }
 
-    public Simbolo(String id, String tipo, int linha) {
+    public Simbolo(String id, String token, int linha) {
         this.id = id;
-        this.tipo = tipo;
+        this.token = token;
         this.linha = linha;
     }
-
-    
-    
-    
 
     public String getId() {
         return id;
@@ -38,12 +34,12 @@ public class Simbolo implements Comparable<Simbolo>{
         this.id = id;
     }
 
-    public String getTipo() {
-        return tipo;
+    public String getToken() {
+        return token;
     }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public String getValor() {
@@ -68,14 +64,11 @@ public class Simbolo implements Comparable<Simbolo>{
         if(dif != 0){
             return dif;
         }
-        return tipo.compareTo(o.getTipo());
+        return token.compareTo(o.getToken());
     }
 
     @Override
     public String toString() {
-        return "Simbolo{" + "id=" + id + ", tipo=" + tipo + ", valor=" + valor + ", linha=" + linha + '}';
+        return "Simbolo{" + "id=" + id + ", token=" + token + ", valor=" + valor + ", linha=" + linha + '}';
     }
-    
-    
-    
 }

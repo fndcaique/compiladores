@@ -17,7 +17,6 @@ import java.util.HashSet;
 public final class Linguagem {
 
     private static Linguagem fnd = null;
-    private TabelaSimbolos table;
     private HashMap<String, String[]> mapfirst, mapfollow;
     private String[] arrbegin = new String[]{BEGIN.name()};
     private String[] arrend = new String[]{END.name()};
@@ -55,7 +54,6 @@ public final class Linguagem {
 //    private String[] arr = new String[]{};
 
     private Linguagem() {
-        table = new TabelaSimbolos();
         // inicializando map isFirst
         mapfirst = new HashMap<>();
 
@@ -73,6 +71,8 @@ public final class Linguagem {
         mapfirst.put("valor_double", arrvalordouble);
         mapfirst.put("valor_exp", arrvalorexp);
         mapfirst.put("valor", join(arrvalorint, arrvalordouble, arrvalorexp));
+        mapfirst.put("valor_gen", join( new String[]{MENOS.name()}, first("valor"),
+                first("id_var"), arrabreparentese));
         mapfirst.put("abre_parentese", arrabreparentese);
         mapfirst.put("fecha_parentese", arrfechaparentese);
         mapfirst.put("abre_chave", arrabrechave);
@@ -99,8 +99,8 @@ public final class Linguagem {
         mapfirst.put("operador_aritmetico", arropari);
         mapfirst.put("atribuidor", arratribuidor);
         mapfirst.put("atribuicao", arridvar);
-        mapfirst.put("operacao_aritmetica", join(arridvar, first("valor")));
-        mapfirst.put("operacao_aritmetica", join(arrabreparentese, first("valor"), arridvar));
+        mapfirst.put("operacao_aritmetica", first("valor_gen"));
+        mapfirst.put("operacao_aritmetica", first("valor_gen"));
 
         //mapfirst.put("", );
         // inicializando map follow
@@ -116,20 +116,24 @@ public final class Linguagem {
         mapfollow.put("id_var", join(first("atribuidor"), arrvirgula, arrpontovirgula, first("and_or"), first("operador_relacional")));
         mapfollow.put("cmd", join(first("end"), arrfechachave));
         mapfollow.put("cmd_if", follow("cmd"));
-        mapfollow.put("abre_parentese", join(arrnot, arrabreparentese, first("valor"), first("id_var")));
+        mapfollow.put("bool", join(arrfechaparentese, first("and_or"),
+                first("operador_relacional"), first("operador_aritmetico")));
+        mapfollow.put("atribuicao", arrpontovirgula);
+        mapfollow.put("valor_gen", join(first("operador_aritmetico"), follow("bool"),
+                follow("atribuicao"), first("operador_aritmetico"),
+                first("operacao_aritmetica"), first("fecha_parentese")));
+        mapfollow.put("abre_parentese", join(arrnot, arrabreparentese, first("valor_gen")));
         mapfollow.put("fecha_parentese", join(arrpontovirgula, arrabrechave, first("operador_aritmetico"), first("operador_relacional")));
         mapfollow.put("abre_chave", first("cmd"));
         mapfollow.put("fecha_chave", join(first("cmd"), follow("cmd"), first("else")));
-        mapfollow.put("bool", join(arrfechaparentese, first("and_or"),
-                first("operador_relacional"), first("operador_aritmetico")));
-        mapfollow.put("operador_relacional", join(first("valor"), first("id_var"), first("bool")));
-        mapfollow.put("menor", join(first("id_var"), first("valor"), arrabreparentese));
+        mapfollow.put("operador_relacional", join(first("valor_gen")));
+        mapfollow.put("menor", first("valor_gen"));
         mapfollow.put("maior", follow("menor"));
         mapfollow.put("igual", follow("menor"));
         mapfollow.put("menor_igual", follow("menor"));
         mapfollow.put("maior_igual", follow("menor"));
         mapfollow.put("diferente", follow("menor"));
-        mapfollow.put("and_or", join(first("valor"), first("id_var"), first("bool")));
+        mapfollow.put("and_or", join(first("valor_gen"), first("bool")));
         mapfollow.put("and", follow("and_or"));
         mapfollow.put("or", follow("and"));
         mapfollow.put("not", arrabreparentese);
@@ -141,15 +145,11 @@ public final class Linguagem {
         mapfollow.put("for", arrabreparentese);
         mapfollow.put("ponto_virgula", join(first("cmd"), first("cmd_var")));
 //        mapfollow.put("letra",);
-        mapfollow.put("atribuicao", arrpontovirgula);
-        mapfollow.put("valor", join(arrpontovirgula, follow("definir_var"),
-                first("operador_relacional"), first("and_or"), follow("bool"),
-                follow("atribuicao"), first("operador_aritmetico")));
-        mapfollow.put("atribuidor", join(first("id_var"), first("valor"), arrabreparentese));
-        mapfollow.put("operador_aritmetico", join(first("valor"), first("id_var"),
-                arrabreparentese));
+        mapfollow.put("valor", follow("valor_gen"));
+        mapfollow.put("atribuidor", first("valor_gen"));
+        mapfollow.put("operador_aritmetico", first("valor_gen"));
         mapfollow.put("operacao_aritmetica", join(first("fecha_parentese"),
-                follow("valor")));
+                follow("valor_gen")));
     }
 
     public static Linguagem getInstace() {
@@ -157,10 +157,6 @@ public final class Linguagem {
             fnd = new Linguagem();
         }
         return fnd;
-    }
-    
-    public TabelaSimbolos getTabelaSimbolos(){
-        return table;
     }
 
     public String[] first(String exp) {

@@ -1,7 +1,7 @@
 begin
 int a = 3e+3, b;
 =b; // quem tem '=' como follow
-if(a < b){
+if(a < -b){
     while(2 > a){
         c = a*e;
     }
@@ -12,7 +12,7 @@ for(i = 0; i < 10; i = i+1){
 }
 if(sa > 7){
     #a = t; // quem tem '=' como follow
-} else if(joia >-= 3 && !(10 > 4)){
+} else if(joia >-= 3 && !(10 > -4)){
     abelha = a;
 }
 end
