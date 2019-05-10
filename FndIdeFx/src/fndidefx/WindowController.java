@@ -378,12 +378,7 @@ public class WindowController implements Initializable {
 
             ArrayList<Erro> le = null;
 
-            try {
-                le = anasin.start();
-            } catch (Exception e) {
-                le = null;
-                System.out.println("erro de compilação:\n" + e);
-            }
+            le = anasin.start();
             if (le != null) {
                 for (Erro e : le) {
                     System.out.println("Linha:" + (e.getLinha() + 1) + ", " + e.getMsg());

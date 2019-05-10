@@ -12,19 +12,57 @@ package fndidefx.model;
 public class Simbolo implements Comparable<Simbolo>{
     private String id, token, valor;
     private int linha;
-
-    public Simbolo(String id, String token, String valor, int linha) {
-        this.id = id;
-        this.token = token;
-        this.valor = valor;
-        this.linha = linha;
-    }
-
+    private boolean init, declared;
+    private int utilizada;
+    private String tipo;
+    
     public Simbolo(String id, String token, int linha) {
         this.id = id;
         this.token = token;
         this.linha = linha;
     }
+    
+    public Simbolo(String tipo, String id, String token, String valor, int linha) {
+        this(id, token, linha);
+        this.tipo = tipo;
+        declared = true;
+        init = false;
+        utilizada = 0;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public boolean isInit() {
+        return init;
+    }
+
+    public void setInit(boolean init) {
+        this.init = init;
+    }
+
+    public boolean isDeclared() {
+        return declared;
+    }
+
+    public void setDeclared(boolean declared) {
+        this.declared = declared;
+    }
+
+    public int getUtilizada() {
+        return utilizada;
+    }
+
+    public void setUtilizada(int utilizada) {
+        this.utilizada = utilizada;
+    }
+
+    
 
     public String getId() {
         return id;

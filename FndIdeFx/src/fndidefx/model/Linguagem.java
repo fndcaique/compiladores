@@ -100,7 +100,7 @@ public final class Linguagem {
         mapfirst.put("atribuidor", arratribuidor);
         mapfirst.put("atribuicao", arridvar);
         mapfirst.put("operacao_aritmetica", first("valor_gen"));
-        mapfirst.put("operacao_aritmetica", first("valor_gen"));
+        //mapfirst.put("operacao_aritmetica", first("valor_gen"));
 
         //mapfirst.put("", );
         // inicializando map follow

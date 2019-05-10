@@ -35,6 +35,9 @@ public class TabelaSimbolos {
     }
 
     public Simbolo search(Simbolo s) {
+        if(table.isEmpty()){
+            return null;
+        }
         int pos = find(s.getId());
         if (pos >= table.size()) {
             return null;

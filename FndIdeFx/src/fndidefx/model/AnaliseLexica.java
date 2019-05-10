@@ -231,6 +231,8 @@ public class AnaliseLexica {
                     case COMENTARIO_LINHA:
                         continuar = true;
                         break;
+                    default:
+                        #atribuir tipo aos valores constantes
                 }
             }
             text = text.substring(fim); // remove lexema atual
