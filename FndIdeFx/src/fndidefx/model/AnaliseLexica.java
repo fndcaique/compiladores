@@ -15,6 +15,7 @@ import java.util.ArrayList;
 public class AnaliseLexica {
 
     public static String ERROR = "ERRO_LEXICO";
+    public static Simbolo FIM_CADEIA = new Simbolo("$", TokenType.FIM.name(), 0);
     private ArrayList<Erro> erros;
     private boolean continuar;
     private int linha;
@@ -23,7 +24,7 @@ public class AnaliseLexica {
     //private final ArrayList<TokenType> tokens;
 
     public AnaliseLexica(String entrada) {
-        linha = 0;
+        linha = 1;
         if (!entrada.endsWith("\n")) {
             entrada += '\n';
         }
@@ -35,7 +36,7 @@ public class AnaliseLexica {
     public ArrayList<Erro> getErros() {
         return erros;
     }
-    
+
 
     /*
     aEb = a * (10^b)
@@ -130,9 +131,10 @@ public class AnaliseLexica {
     }
 
     private boolean delimitador(char c) {
-        return nl(c) || space(c) || virgula(c) || pontoVirgula(c) || atribuir(c)
+        return /*nl(c) || space(c) || virgula(c) || pontoVirgula(c) || atribuir(c)
                 || operadorAritmetico(c) || and(c) || or(c) || not(c)
-                || abreParentese(c) || fechaParentese(c) || abreChave(c) || fechaChave(c);
+                || abreParentese(c) || fechaParentese(c) || abreChave(c) || fechaChave(c)
+                || */ (!letra(c) && !numero(c));
     }
 
     /**
@@ -143,6 +145,13 @@ public class AnaliseLexica {
             ++posini;
         }
         return posini;
+    }
+
+    private int findDelimitadorID(int p) {
+        while (p < text.length() && letra(text.charAt(p))) {
+            p++;
+        }
+        return p;
     }
 
     private int iniciaComNumero() {
@@ -177,9 +186,10 @@ public class AnaliseLexica {
     public Simbolo nextSimbolo() {
 
         if (finalisado) {
-            return null;
+            return FIM_CADEIA;
         }
         String lex;
+        String tipo = "";
         char c;
         ArrayList<TokenType> tks;
         TokenType tk;
@@ -188,7 +198,8 @@ public class AnaliseLexica {
             removerEspacosInicio();
             if (text.isEmpty()) {
                 finalisado = true;
-                return new Simbolo("$", TokenType.FIM.name(), linha);
+                FIM_CADEIA.setLinha(linha);
+                return FIM_CADEIA;
             }
             fim = 0;
             tk = null;
@@ -202,7 +213,7 @@ public class AnaliseLexica {
                 ++linha;
                 continuar = true;
             } else if (letra(c)) {
-                fim = findDelimitador(0);
+                fim = findDelimitadorID(0);
             } else if (text.length() >= 2) { // se pode ser comentario
                 if (text.startsWith("//")) {
                     fim = text.indexOf("\n");
@@ -231,16 +242,23 @@ public class AnaliseLexica {
                     case COMENTARIO_LINHA:
                         continuar = true;
                         break;
-                    default:
-                        #atribuir tipo aos valores constantes
+                    case VALOR_INT:
+                    case VALOR_DOUBLE:
+                    case VALOR_EXP:
+                        tipo = tk.name().substring(tk.name().indexOf("_") + 1).toLowerCase();
+                        break;
                 }
+            } else { // erro lexico
+
+                // if (tk == null) {
+                erros.add(new Erro(linha, ERROR + " = " + lex));
+                //return new Simbolo(lex, TokenType.ERRO_LEXICO.name(), linha);
+                continuar = true;
+                //  }
             }
             text = text.substring(fim); // remove lexema atual
+
         } while (continuar);
-        if (tk == null) {
-            erros.add(new Erro(linha, ERROR + " = " + lex));
-            return new Simbolo(lex, TokenType.ERRO_LEXICO.name(), linha);
-        }
-        return new Simbolo(lex, tk.name(), linha);
+        return new Simbolo(tipo, lex, tk.name(), linha);
     }
 }

@@ -88,10 +88,7 @@ public abstract class Token {
         FECHA_COMENTARIO("\\*/"), 
         COMENTARIO_BLOCO("/\\*(.|\\R)*\\*/$"),
         NL("\\n"), 
-        INICIO("#"),
-        FIM("\\$"),
-        ERRO_LEXICO(""),
-        ERRO_SINTATICO("");
+        FIM("\\$");
         
 
         private final String regex;

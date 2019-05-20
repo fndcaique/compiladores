@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -112,6 +113,8 @@ public class WindowController implements Initializable {
         colToken.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getToken()));
         colLinha.setCellValueFactory(c -> new SimpleStringProperty((c.getValue().getLinha() + 1) + ""));
         colValor.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getValor()));
+
+        colLinha.setComparator((String o1, String o2) -> Integer.parseInt(o1) - Integer.parseInt(o2));
 
         startEventClose();
     }
@@ -369,25 +372,31 @@ public class WindowController implements Initializable {
             initializeCodeArea(); 
             codearea.appendText(text);*/
             tbvsimbolos.getItems().clear();
+            new Thread(() -> {
 
-            System.out.println("compilando...");
+                System.out.println("compilando...");
+                System.out.println("#########################################33");
+                anasin = new AnaliseSintatica(codearea.getText());
+                Platform.runLater(() -> {
+                    double ini = System.currentTimeMillis();
+                    ArrayList<Erro> le = null;
+                    le = anasin.start();
+                    if (le != null) {
+                        for (Erro e : le) {
+                            //codearea.setParagraphStyle(e.getLine(), Collections.singleton("error")); // pinta linha do erro
+                            txLog.appendText(e + "\n");
+                        }
 
-            System.out.println("#########################################33");
+                    }
+                    double fim = System.currentTimeMillis();
+                    txLog.appendText("Compilado em " + ((fim-ini)/1000)+" segundos");
+                });
+                Platform.runLater(() -> {
 
-            anasin = new AnaliseSintatica(codearea.getText());
-
-            ArrayList<Erro> le = null;
-
-            le = anasin.start();
-            if (le != null) {
-                for (Erro e : le) {
-                    System.out.println("Linha:" + (e.getLinha() + 1) + ", " + e.getMsg());
-                    //codearea.setParagraphStyle(e.getLine(), Collections.singleton("error")); // pinta linha do erro
-                    txLog.appendText("Linha:" + (e.getLinha() + 1) + ", " + e.getMsg() + "\n");
-                }
-            }
-            System.out.println("COMPILADO");
-
+                    this.tbvsimbolos.getItems().setAll(anasin.getTabelaSimbolos().getTable());
+                });
+                System.out.println("COMPILADO");
+            }).start();
         }
     }
 

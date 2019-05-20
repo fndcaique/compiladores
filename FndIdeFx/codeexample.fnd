@@ -1,18 +1,19 @@
 begin
-int a = 3e+3, b;
+int a = 3e+3 - 7 + 5, b;/*
 =b; // quem tem '=' como follow
 if(a < -b){
     while(2 > a){
         c = a*e;
     }
 }
-sa = true + 3;
+sa = true + 3;*/
 for(i = 0; i < 10; i = i+1){
     = i; // quem tem '=' como follow
 }
+/*
 if(sa > 7){
     #a = t; // quem tem '=' como follow
 } else if(joia >-= 3 && !(10 > -4)){
     abelha = a;
-}
+}*/
 end

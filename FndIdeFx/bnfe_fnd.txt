@@ -16,11 +16,11 @@ t_double = "double"
 
 t_exp = "exp"
 
-t_definir_var = t_atribuicao [t_virgula, t_definir_var]
+t_definir_var = (t_atribuicao|t_id_var) [t_virgula, t_definir_var]
 
 t_virgula = ","
 
-t_id_var = t_letra, {t_algarismo | t_letra}*
+t_id_var = {t_letra}+
 
 t_cmd = (t_atribuicao, t_ponto_virgula) |
 	(t_cmd_if | t_cmd_while | t_cmd_for) [t_cmd]
@@ -113,9 +113,8 @@ t_atribuidor = "="
 
 t_valor_gen = [menos] (t_valor|t_id_var|t_operacao_aritmetica)
 
-t_atribuicao = t_id_var, t_atribuidor, t_valor_gen
+t_atribuicao = ["(",t_tipo_var,")"] t_id_var, t_atribuidor, t_valor_gen
 
-t_operacao_aritmetica = ((t_abre_parenteses, t_operacao_aritmetica, t_fecha_parenteses)|
-	(t_valor_gen, t_operador_aritmetico, t_valor_gen))|
-	operador_aritmetico, (t_valor_gen)
-	[operacao_aritmetica]
+t_operacao_aritmetica = (t_abre_parenteses, t_operacao_aritmetica, t_fecha_parenteses)|
+	(t_valor_gen)
+	[t_operador_aritmetico, operacao_aritmetica]

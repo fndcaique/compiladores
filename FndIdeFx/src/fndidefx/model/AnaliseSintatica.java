@@ -7,6 +7,7 @@ package fndidefx.model;
 
 import static fndidefx.model.Token.TokenType.*;
 import java.util.ArrayList;
+import javafx.util.Pair;
 
 /**
  *
@@ -22,13 +23,15 @@ public class AnaliseSintatica {
     private ArrayList<Simbolo> arrtokens;
     private int idxprox, idxant, idxatual;
     private Linguagem ling;
-    private TabelaSimbolos tablesimb;
+    private TabelaSimbolos tablesimb, tablevars;
     private Simbolo varRec;
 
-    private String tipoAtual;
+    private String tipoAtual, codemed;
 
     public AnaliseSintatica(String code) {
+        codemed = "";
         tablesimb = new TabelaSimbolos();
+        tablevars = new TabelaSimbolos();
         idxant = -1;
         idxatual = idxprox = 0;
         arrtokens = new ArrayList<>();
@@ -49,22 +52,34 @@ public class AnaliseSintatica {
 
     }
 
+    public TabelaSimbolos getTabelaSimbolos() {
+        return this.tablesimb;
+    }
+
     private void next() {
         Simbolo s = analex.nextSimbolo();
-        if (s != null) {
-            arrtokens.add(s);
-        }
+//        if (s != null) {
+        arrtokens.add(s);
+//        }
         tkprevius = tk;
         tk = tknext;
         idxant++;
         idxatual = idxprox++;
-        tknext = idxprox < arrtokens.size() ? arrtokens.get(idxprox) : null;
-        if (tablesimb.search(tk) != null) { // já utilizada
-//            if (tk.getToken().equals(ID_VAR.name())) {
-//                //tk.setUtilizada(tk.getUtilizada() + 1);
-//            }
-        } else {
-            tablesimb.add(tk);
+        tknext = /*idxprox < arrtokens.size() ?*/ arrtokens.get(idxprox) /*: null*/;
+//        if (tk == null) {
+//            return;
+//        }
+
+        tablesimb.add(tk);
+        s = tablevars.search(tk);
+        if (s != null) {
+            // existe na tabela de variaveis
+            s.setLinha(tk.getLinha());
+            tk = s;
+            //s.setUtilizada(s.getUtilizada()+1);
+        } else if (ID_VAR.name().equals(tk.getToken())) {
+            //tk.setUtilizada(tk.getUtilizada()+1);
+            tablevars.add(tk);
         }
     }
 
@@ -77,14 +92,8 @@ public class AnaliseSintatica {
 
     }
 
-    private void pularComando() {
-        if (!(ling.isFirst("tipo_var", tk.getToken()) || ling.isFirst("valor", tk.getToken()) || ling.isFirst("cmd", tk.getToken()))) {
-            next();
-        }
-    }
-
     private boolean erroLexico() {
-        return tk.getToken().equals(ERRO_LEXICO.name());
+        return tk.getToken().equals(AnaliseLexica.ERROR);
     }
 
     private ArrayList<Erro> join(ArrayList<Erro> a, ArrayList<Erro> b) {
@@ -110,109 +119,222 @@ public class AnaliseSintatica {
         return c;
     }
 
+    private void pularErrosLexicos() {
+        while (tk.getToken().equals(AnaliseLexica.ERROR)) {
+            next();
+        }
+    }
+
     public ArrayList<Erro> start() {
+
         next();
+        pularErrosLexicos();
         begin();
         cmdVar();
         cmd();
         end();
-        return join(analex.getErros(), erros);
-    }
-
-    private boolean idVar() {
-        if (tk.getToken().equals(ID_VAR.name()) || erroLexico()) {
+        next();
+        while (!tk.getToken().equals(FIM.name())) {
+            erros.add(new Erro(tk.getLinha(), "ERRO: Simbolo '" + tk.getId() + "' não esperado após o fim do programa"));
             next();
-        } else {
-            erros.add(new Erro(tk.getLinha(), "'" + tk.getId() + "', não é um id de variavel"));
-            return false;
         }
-        return true;
-
+        // verificar erros semanticos
+        tablevars.getTable().stream().filter((var) -> (var.getUtilizada() < 1)).forEach((var) -> {
+            erros.add(new Erro(-1, "ATENÇÃO: Var '" + var.getId() + "' não utilizada"));
+        });
+        erros = join(analex.getErros(), erros);
+        erros.sort((Erro o1, Erro o2) -> o1.getLinha() - o2.getLinha());
+        return erros;
     }
 
-    private void atribuidor() {
+    /**
+     * pula o token se ele não for first de ninguém
+     */
+    private boolean pularToken() {
+        if (!ling.isFirst(tk.getId())) {
+            next();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean atribuidor() {
         if (tk.getToken().equals(ATRIBUIR.name()) || erroLexico()) {
             next();
+            return true;
         } else {
             erros.add(new Erro(tk.getLinha(), "ERRO_ATRIBUIR: Esperado = '=', Obtido = '" + tk.getId() + "'"));
         }
+        return false;
     }
 
     private boolean bool() {
-        if (ling.isFirst("bool", tk.getToken()) || erroLexico()) {
-            if (tk.getToken().equals(NOT.name()) || erroLexico()) {
+        boolean r = true, not = false;
+        Simbolo va = null;
+        pularErrosLexicos();
+        if (ling.isFirst("bool", tk.getId())) {
+            // inicio primeiro operando
+            if (tk.getToken().equals(NOT.name())) {
                 next();
-                if (!bool()) {
-                    return false;
-                }
-            } else if (tk.getToken().equals(ABRE_PARENTESE.name()) || erroLexico()) {
+                bool();
+                not = true;
+            }
+            if (tk.getToken().equals(ABRE_PARENTESE.name()) || erroLexico()) { // opcional
                 next();
                 if (bool()) {
                     if (tk.getToken().equals(FECHA_PARENTESE.name()) || erroLexico()) {
                         next();
                     } else {
-                        erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = ')', Obtido = " + tk.getId()));
-
+                        erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = ')', Obtido = '" + tk.getId() + "'"));
+                        //pularToken();
                     }
-                } else {
-                    return false;
                 }
-            } else { // id_var ou valor
-                if (tk.getToken().equals(ID_VAR)) {
-                    //tk.setUtilizada(tk.getUtilizada() + 1);
-                }
-                if (ling.isFirst("operador_relacional", tknext.getToken())) {
-                    next();
-                    if (ling.isFirst("operador_relacional", tk.getToken()) || erroLexico()) {
-                        next();
-                    } else {
-                        erros.add(new Erro(tk.getLinha(),
-                                "ERRO_OPERADOR_RELACIONAL: "
-                                + "Esperado = {'<', '>', '==', '<=', '>=', '!='}, Obtido = " + tk.getId()));
+            } else// id_var ou valor
+             if (ling.isFirst("operador_aritmetico", tk.getId())
+                        || ling.isFirst("operador_aritmetico", tknext.getId())) { // opcional
 
-                        return false;
+                    va = tk;
+                    Pair<String, String> saida = operacaoAritmetica();
+                    if (va.getToken().equals(ID_VAR.name())) {
+                        va.setUtilizada(va.getUtilizada() + 1);
+                    } else if (!not && saida == null) {
+                        erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VALOR, VALOR}, Obtido = '" + tk.getId() + "'"));
+                        pularToken();
                     }
-                } else if (ling.isFirst("operador_aritmetico", tknext.getToken())) {
-                    operacaoAritmetica();
-                }
-                if (ling.isFirst("valor", tk.getToken()) || tk.getToken().equals(ID_VAR.name()) || erroLexico()) {
+                } else if (tk.getToken().equals(ID_VAR.name())) {
+                    tk.setUtilizada(tk.getUtilizada() + 1);
                     next();
-                } else {
-                    erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VALOR, VALOR}, Obtido = " + tk.getId()));
-
-                    return false;
+                } else if (ling.isFirst("valor", tk.getId())) {
+                    next();
+                } else if (!not) {
+                    erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VALOR, VALOR}, Obtido = '" + tk.getId() + "'"));
+                    pularToken();
                 }
+            // fim primeiro operando
+
+            //operador
+            pularErrosLexicos();
+            if (ling.isFirst("operador_relacional", tk.getId())) { // obrigatório se não for not
+                next();
+            } else if (!not) {
+                erros.add(new Erro(tk.getLinha(),
+                        "ERRO_OPERADOR_RELACIONAL: "
+                        + "Esperado = {'<', '>', '==', '<=', '>=', '!='}, Obtido = '" + tk.getId() + "'"));
+                pularToken();
             }
-            if (ling.isFirst("and_or", tk.getToken())) {
+            pularErrosLexicos();
+            // fim operador
+
+            //segundo operando
+            if (tk.getToken().equals(NOT.name())) {
                 next();
                 bool();
+                not = true;
+            }
+            if (tk.getToken().equals(ABRE_PARENTESE.name()) || erroLexico()) { // opcional
+                next();
+                if (bool()) {
+                    if (tk.getToken().equals(FECHA_PARENTESE.name()) || erroLexico()) {
+                        next();
+                    } else {
+                        erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = ')', Obtido = '" + tk.getId() + "'"));
+                        //pularToken();
+                    }
+                }
+            } else// id_var ou valor
+             if (ling.isFirst("operador_aritmetico", tknext.getId())) { // opcional
+
+                    va = tk;
+                    Pair<String, String> saida = operacaoAritmetica();
+                    if (va.getToken().equals(ID_VAR.name())) {
+                        va.setUtilizada(va.getUtilizada() + 1);
+                    } else if (!not) {
+                        erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VALOR, VALOR}, Obtido = '" + tk.getId() + "'"));
+                        pularToken();
+                    }
+                } else if (tk.getToken().equals(ID_VAR.name())) {
+                    tk.setUtilizada(tk.getUtilizada() + 1);
+                    next();
+                } else if (ling.isFirst("valor", tk.getId())) {
+                    next();
+                } else if (!not) {
+                    erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VALOR, VALOR}, Obtido = '" + tk.getId() + "'"));
+                    pularToken();
+                }
+            // fim segundo operando
+
+            if (ling.isFirst("and_or", tk.getId())) { // opcional
+                next();
+                r = bool();
             }
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VAR, VALOR, '!', '('}, Obtido = " + tk.getId()));
-
-            return false;
+            erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = "
+                    + "{ID_VAR, VALOR, '!', '('}, Obtido = '" + tk.getId() + "'"));
+            pularToken();
+            r = false;
         }
-        return true;
+        return r;
     }
 
-    private String atribuicao() {
-        String saida = null;
-        atribuidor();
-        if ((ling.isFirst("valor", tk.getToken()) || ID_VAR.name().equals(tk.getToken()))
-                && !ling.isFirst("operador_aritmetico",tknext.getToken())) {
-            saida = tk.getTipo();
-            next();
-        }
-        else if (ling.isFirst("operacao_aritmetica", tk.getToken())) { // se a = -1;
-            saida = operacaoAritmetica();
-            if (varRec.getTipo().equals(INT.name()) && !saida.equals(INT.name())) {
-                erros.add(new Erro(tk.getLinha(), "ERRO_ATRIBUICAO: Perda de precisão,"
-                        + " var " + varRec.getId() + " é do tipo " + varRec.getTipo() + " é o resultado é " + saida));
+    private Pair<String, String> atribuicao() {
+        Simbolo var = tk;
+        next();
+        Pair<String, String> saida = null;
+        pularErrosLexicos();
+        boolean erro = false;
+        String valor = "", cast = "";
+        if (atribuidor()) {
+            if (tk.getToken().equals(ABRE_PARENTESE.name())) { // casting
+                if (ling.isFirst("tipo_var", tknext.getId())) {
+                    next();
+                    cast = tk.getId();
+                    next();
+                    if (tk.getToken().equals(FECHA_PARENTESE.name())) {
+                        next();
+                    } else {
+                        erros.add(new Erro(tk.getLinha(), "ERRO_CASTING: Esperado = ')',"
+                                + "obtido = '" + tk.getId() + "'"));
+                    }
+                } else{
+                    return operacaoAritmetica();
+                }
             }
-        }else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_ATRIBUICAO: Esperado = {ID_VAR, VALOR, OPERACAO_ARITMETICA}, Obtido = " + tk.getId()));
+            if (tk.getToken().equals(MENOS.name())) {
+                valor += "-";
+                next();
+            }
+            if ((ling.isFirst("valor", tk.getId()) || ID_VAR.name().equals(tk.getToken()))
+                    && !ling.isFirst("operador_aritmetico", tknext.getId())) {
+                saida = new Pair<>(tk.getTipo(), tk.getId());
+                next();
+            } else if (ling.isFirst("operacao_aritmetica", tk.getId())) { // se a = -1;
+                saida = operacaoAritmetica();
+            } else {
+                erros.add(new Erro(tk.getLinha(), "ERRO_ATRIBUICAO: Esperado = "
+                        + "{ID_VAR, VALOR, OPERACAO_ARITMETICA}, Obtido = '" + tk.getId() + "'"));
+                //pularToken();
+                erro = true;
+            }
+            if (!erro && saida != null) {
+                var.setValor(valor + saida.getValue());
+                var.setInitialized(true);
+                if(!cast.isEmpty()){
+                    saida = new Pair<>(cast, saida.getValue());
+                }
+                if (var.getTipo() != null && !var.getTipo().isEmpty()
+                        && !var.getTipo().equals(prioritType(var.getTipo(), saida.getKey()))) {
+                    addWarnningPrecisao(var, saida.getKey());
+                }
+            }
         }
-        return saida;
+
+        return saida != null ? new Pair<>(saida.getKey(), valor + saida.getValue()) : null;
+    }
+
+    private void addWarnningPrecisao(Simbolo var, String tipodif) {
+        erros.add(new Erro(var.getLinha(), "ATENÇÃO: Possível perda de precisão,"
+                + " var '" + var.getId() + "' é do tipo '" + var.getTipo()
+                + "' e o resultado é '" + tipodif + "'"));
     }
 
     private void cmdWhile() {
@@ -226,10 +348,13 @@ public class AnaliseSintatica {
     private void cmdFor() {
         next();
         boolean errocabecalho = false;
-        if (ABRE_PARENTESE.name().equals(tk.getToken()) || erroLexico()) {
+        if (ABRE_PARENTESE.name().equals(tk.getToken())) {
             next();
             if (ID_VAR.name().equals(tk.getToken())) { // opcional
-                if (atribuicao() == null) {
+                Simbolo v = tk;
+                //next();
+                Pair<String, String> res = atribuicao();
+                if (res == null) {
                     errocabecalho = true;
                 }
             }
@@ -242,6 +367,7 @@ public class AnaliseSintatica {
                     errocabecalho = true;
                 } else {
                     if (ID_VAR.name().equals(tk.getToken())) { // opcional
+                        //next();
                         if (atribuicao() == null) {
                             errocabecalho = true;
                         }
@@ -250,16 +376,18 @@ public class AnaliseSintatica {
                         if (FECHA_PARENTESE.name().equals(tk.getToken()) || erroLexico()) {
                             next();
                         } else {
-                            erros.add(new Erro(tk.getLinha(), "ERRO_FOR: Esperado = ')' , Obtido = " + tk.getId()));
+                            erros.add(new Erro(tk.getLinha(), "ERRO_FOR: Esperado = ')' , Obtido = '" + tk.getId() + "'"));
                             errocabecalho = true;
+                            pularToken();
                         }
                     }
                 }
             }
 
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_FOR: Esperado = '(' , Obtido = " + tk.getId()));
+            erros.add(new Erro(tk.getLinha(), "ERRO_FOR: Esperado = '(' , Obtido = '" + tk.getId() + "'"));
             errocabecalho = true;
+            pularToken();
         }
         if (errocabecalho) {
             procurarBlocoComando();
@@ -281,12 +409,14 @@ public class AnaliseSintatica {
             if (tk.getToken().equals(FECHA_CHAVE.name()) || erroLexico()) {
                 next();
             } else {
-                erros.add(new Erro(tk.getLinha(), "ERRO_BLOCO_COMANDO: Esperado = '}', Obtido = " + tk.getId()));
+                erros.add(new Erro(tk.getLinha(), "ERRO_BLOCO_COMANDO: Esperado = '}', Obtido = '" + tk.getId() + "'"));
+                pularToken();
                 //
                 return false;
             }
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_BLOCO_COMANDO: Esperado = '{', Obtido = " + tk.getId()));
+            erros.add(new Erro(tk.getLinha(), "ERRO_BLOCO_COMANDO: Esperado = '{', Obtido = '" + tk.getId() + "'"));
+            pularToken();
 
             return false;
         }
@@ -294,32 +424,33 @@ public class AnaliseSintatica {
     }
 
     private boolean condicao() {
-        if (tk.getToken().equals(ABRE_PARENTESE.name()) || erroLexico()) {
+        boolean s = true;
+        pularErrosLexicos();
+        if (tk.getToken().equals(ABRE_PARENTESE.name())) {
             next();
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_CONDICAO: Esperado = '(', Obtido = " + tk.getId()));
-
-            return false;
+            erros.add(new Erro(tk.getLinha(), "ERRO_CONDICAO: Esperado = '(', Obtido = '" + tk.getId() + "'"));
+            pularToken();
+            s = false;
         }
-        if (bool()) {
-            if (tk.getToken().equals(FECHA_PARENTESE.name()) || erroLexico()) {
-                next();
-            } else {
-                erros.add(new Erro(tk.getLinha(), "ERRO_CONDICAO: Esperado = ')', Obtido = " + tk.getId()));
-
-                return false;
-            }
+        s &= bool();
+        pularErrosLexicos();
+        if (tk.getToken().equals(FECHA_PARENTESE.name())) {
+            next();
         } else {
-            return false;
+            erros.add(new Erro(tk.getLinha(), "ERRO_CONDICAO: Esperado = ')', Obtido = '" + tk.getId() + "'"));
+            pularToken();
+            s = false;
         }
-        return true;
+        return s;
     }
 
     private boolean pontoVirgula() {
         if (tk.getToken().equals(PONTO_VIRGULA.name()) || erroLexico()) {
             next();
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_PONTO_VIRGULA: Esperado = ';', Obtido = " + tk.getId()));
+            erros.add(new Erro(tk.getLinha(), "ERRO_PONTO_VIRGULA: Esperado = ';', Obtido = '" + tk.getId() + "'"));
+            pularToken();
 
             return false;
         }
@@ -349,12 +480,10 @@ public class AnaliseSintatica {
     private boolean cmd() {
         String name = tk.getToken();
         do {
-            if (erroLexico() || tk.getToken().equals(PONTO_VIRGULA.name())) {
-                while (erroLexico()) {
-                    next();
-                }
-            } else if (name.equals(ID_VAR.name())) { // atribuicao
-                next();
+            pularErrosLexicos();
+            if (name.equals(ID_VAR.name())) { // atribuicao
+                testeDeclarada(tk);
+                //next();
                 boolean erro = false;
                 if (atribuicao() == null) {
                     erro = true;
@@ -363,7 +492,7 @@ public class AnaliseSintatica {
                 }
                 if (erro) {
                     while (!tk.getToken().equals(PONTO_VIRGULA.name()) // para pegar algum outro erro como 2 = 2;
-                            && !(ling.isFirst("cmd", tk.getToken()) && !tk.getToken().equals(ID_VAR.name()))) {
+                            && !(ling.isFirst("cmd", tk.getId()) && !tk.getToken().equals(ID_VAR.name()))) {
                         next();
                     }
                     if (tk.getToken().equals(PONTO_VIRGULA.name())) {
@@ -377,149 +506,186 @@ public class AnaliseSintatica {
             } else if (name.equals(WHILE.name())) { // while
                 cmdWhile();
             } else { // erro
-                erros.add(new Erro(tk.getLinha(), "ERRO_COMANDO: Esperado = {'if','while','for',ID_VAR}, Obtido = '" + tk.getId() + "'"));
-                verificaProximoToken();
+                erros.add(new Erro(tk.getLinha(), "ERRO_COMANDO: Esperado = "
+                        + "{'if','while','for',ID_VAR}, Obtido = '" + tk.getId() + "'"));
+                pularToken();
+                /*verificaProximoToken();
                 while (!ling.isFirst("cmd", tk.getToken()) && !tk.getToken().equals(END.name())
                         && !tk.getToken().equals(FECHA_CHAVE.name())) {
                     next();
-                }
+                }*/
             }
             name = tk.getToken();
-        } while (ling.isFirst("cmd", name));
+        } while (ling.isFirst("cmd", tk.getId()) && !END.name().equals(name));
         return true;
     }
 
-    private void pontoConfianca() {
-        do {
-            if (tk.getToken().equals(ID_VAR.name()) && !tknext.getToken().equals(ATRIBUIR.name())) {
-                next();
-            }
-            while (!(ling.isFirst("cmd", tk.getToken()) || END.name().equals(tk.getToken())
-                    || ABRE_CHAVE.name().equals(tk.getToken()) || FECHA_CHAVE.name().equals(tk.getToken()))) {
-                next();
-            }
-            System.out.println("pontoConfianca = " + tk.getId() + ", " + tk.getToken());
-        } while (!END.name().equals(tk.getToken()) && tk.getToken().equals(ID_VAR.name()) && !tknext.getToken().equals(ATRIBUIR.name()));
-
-    }
-
-    private void operadorAritmetico() {
-        if (ling.isFirst("operador_aritmetico", tk.getToken())) {
+    private String operadorAritmetico() {
+        String op = null + "";
+        if (ling.isFirst("operador_aritmetico", tk.getId())) {
+            op = tk.getId();
             next();
         } else {
 
-            erros.add(new Erro(tk.getLinha(), "ERRO_OPERADOR_ARITMETIC0: Esperado: {'+', '-', '*', '/'}, Obtido = " + tk.getId()));
+            erros.add(new Erro(tk.getLinha(), "ERRO_OPERADOR_ARITMETICO: Esperado: "
+                    + "{'+', '-', '*', '/'}, Obtido = '" + tk.getId() + "'"));
+            pularToken();
 
+        }
+        return op;
+    }
+
+    private String prioritType(String t1, String t2) {
+        t1 = t1.toUpperCase();
+        t2 = t2.toUpperCase();
+        if (t1.equals(EXP.name()) || t2.equals(EXP.name())) {
+            return EXP.name().toLowerCase();
+        }
+        if (t1.equals(DOUBLE.name()) || t2.equals(DOUBLE.name())) {
+            return DOUBLE.name().toLowerCase();
+        }
+        return INT.name().toLowerCase();
+    }
+
+    private void testeDeclarada(Simbolo s) {
+        if (!s.isDeclared()) {
+            erros.add(new Erro(s.getLinha(), "ERRO_OPERACAO_ARITMETICA: '"
+                    + s.getId() + "' não declarada"));
+            //pularToken();
         }
     }
 
-    private String operacaoAritmetica() {
-        String saida = "";
-        if (ling.isFirst("operacao_aritmetica", tk.getToken()) || erroLexico()) {
+    private void testeInicializada(Simbolo s) {
+        if (!s.isInitialized()) {
+            erros.add(new Erro(s.getLinha(), "ERRO_OPERACAO_ARITMETICA: '"
+                    + s.getId() + "' não inicializada"));
+            //pularToken();
+        }
+    }
 
+    private Pair<String, String> operacaoAritmetica() {
+        Pair<String, String> saida = null;
+        String valor = "", tipo = INT.name();
+        boolean usarop = true;
+        if (ling.isFirst("operacao_aritmetica", tk.getId())) {
+
+            if (tk.getToken().equals(MENOS.name())) {
+                saida = operacaoAritmetica();
+                return saida == null ? null : new Pair<>(saida.getKey(), "-" + saida.getValue());
+            }
+            // inicio operando 
             if (ABRE_PARENTESE.name().equals(tk.getToken())) {
+                valor += "(";
                 next();
                 saida = operacaoAritmetica();
+                valor += saida.getValue();
+                tipo = prioritType(tipo, saida.getKey());
                 if (FECHA_PARENTESE.name().equals(tk.getToken()) || erroLexico()) {
+                    valor += ")";
                     next();
                 } else {
-                    erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = ')', Obtido = " + tk.getId()));
+                    erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: "
+                            + "Esperado = ')', Obtido = '" + tk.getId() + "'"));
+                    //pularToken();
                 }
-            } else if (ling.isFirst("valor", tk.getToken())) {
+            } else if (ling.isFirst("valor", tk.getId())) {
+                valor += tk.getId();
+                tipo = prioritType(tipo, tk.getTipo());
                 next();
             } else if (ID_VAR.name().equals(tk.getToken())) {
-                if (!tk.isDeclared()) {
-                    erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: " + tk.getId() + " não declarada"));
-                }
-                if (!tk.isInit() && (tk.getValor() == null || tk.getValor().isEmpty())) {
-                    erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: " + tk.getId() + " não inicializada"));
-                }
+                testeDeclarada(tk);
+                testeInicializada(tk);
+                tk.setUtilizada(tk.getUtilizada() + 1);
+                valor += tk.getValor();
+                tipo = prioritType(tipo, tk.getTipo());
                 next();
             } else {
-                erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = {'(', ID_VAR, VALOR}, Obtido = " + tk.getId()));
+                erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = "
+                        + "{'(', ID_VAR, VALOR}, Obtido = '" + tk.getId() + "'"));
+                //pularToken();
             }
-            operadorAritmetico();
-            if (ABRE_PARENTESE.name().equals(tk.getToken())) {
+            // fim primeiro
+
+            // parte opcional
+            if (ling.isFirst("operador_aritmetico", tk.getId())) {
+                valor += tk.getId();
                 next();
                 saida = operacaoAritmetica();
-                if (FECHA_PARENTESE.name().equals(tk.getToken()) || erroLexico()) {
-                    next();
-                } else {
-                    erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = ')', Obtido = " + tk.getId()));
-                }
-            } else if (ling.isFirst("valor", tk.getToken()) || ID_VAR.name().equals(tk.getToken())) {
-                next();
-            } else {
-                erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = {'(', ID_VAR, VALOR}, Obtido = " + tk.getId()));
-            }
-            // parte opcional
-            if (ling.isFirst("operador_aritmetico", tk.getToken())) {
-                next();
-                if (ling.isFirst("operador_aritmetico", tknext.getToken()) || ABRE_PARENTESE.name().equals(tknext.getToken())) {
-                    saida = operacaoAritmetica();
-                } else if (ling.isFirst("valor", tk.getToken()) || ID_VAR.name().equals(tk.getToken())) {
-                    next();
-                } else {
-                    erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = {'(', ID_VAR, VALOR}, Obtido = " + tk.getId()));
-                }
-            }
+                tipo = prioritType(tipo, saida.getKey());
+                valor += saida.getValue();
+            } //else {
+            //System.out.println(tk);
+            //}
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = {ID_VAR, VALOR, ABRE_PARENTES}, Obtido = " + tk.getId()));
+            erros.add(new Erro(tk.getLinha(), "ERRO_OPERACAO_ARITMETICA: Esperado = "
+                    + "{ID_VAR, VALOR, ABRE_PARENTES}, obtido = '" + tk.getId() + "'"));
+            //pularToken();
         }
-        return saida;
+        return new Pair<>(tipo, valor);
     }
 
     private boolean valor() {
-        if (ling.isFirst("valor", tk.getToken()) || erroLexico()) {
+        pularErrosLexicos();
+        if (ling.isFirst("valor", tk.getId()) || erroLexico()) {
             // valor int, double, ou exp
             next();
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_VALOR: Esperado = {VALOR_INT, VALOR_DOUBLE, VALOR_EXP, OPERACAO_ARITMETICA}, Obtido = " + tk.getId()));
+            erros.add(new Erro(tk.getLinha(), "ERRO_VALOR: Esperado = "
+                    + "{VALOR_INT, VALOR_DOUBLE, VALOR_EXP, OPERACAO_ARITMETICA}, "
+                    + "Obtido = '" + tk.getId() + "'"));
+            pularToken();
             return false;
         }
         return true;
     }
 
     private void definirVar() {
-        varRec = tk;
-        if (idVar()) {
+        if (tk.getToken().equals(ID_VAR.name())) {
+            varRec = tk;
+            varRec.setDeclared(true);
             varRec.setTipo(tipoAtual);
-            String res = atribuicao();
-            if (res == null) {
-                System.out.println("hahaERRO_DEFINIR_VAR: A variavel '" + varRec.getId() + "' deve ser inicializada");
-                erros.add(new Erro(varRec.getLinha(), "ERRO_DEFINIR_VAR: A variavel '" + varRec.getId() + "' deve ser inicializada"));
-            } else {
-                varRec.setInit(true);
-                //s.setValor();
+            if (tknext.getToken().equals(ATRIBUIR.name())) { // opcional
+                Pair<String, String> res = atribuicao();
+                varRec.setInitialized(res != null);
+            } else { // não inicializada
+                next();
             }
             // opcional: novo id
-            if (tk.getToken().equals(VIRGULA.name()) || erroLexico()) {
+            if (tk.getToken().equals(VIRGULA.name())) {
                 next();
                 definirVar();
             }
+        } else {
+            erros.add(new Erro(tk.getLinha(), "'" + tk.getId() + "', não é um id de variavel"));
+            pularToken();
         }
     }
 
     private void cmdVar() {
-        if (ling.isFirst("cmd_var", tk.getToken())) {
+        pularErrosLexicos();
+        if (ling.isFirst("cmd_var", tk.getId())) {
             tipoAtual = tk.getId(); // tipoAtual = int | double | exp
             next();
             definirVar();
             pontoVirgula();
-            if (ling.isFirst("cmd_var", tk.getToken())) {
+            if (ling.isFirst("cmd_var", tk.getId())) {
                 cmdVar();
             }
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_DECLARAÇÃO_VAR: Esperado ={'int', 'double', 'exp'}\nObtido = '" + tk.getId() + "'"));
+            erros.add(new Erro(tk.getLinha(), "ERRO_DECLARAÇÃO_VAR: Esperado = "
+                    + "{'int', 'double', 'exp'}, Obtido = '" + tk.getId() + "'"));
+            pularToken();
 
         }
     }
 
     private void begin() {
-        if (tk.getToken().equals(BEGIN.name())) {
+        if (tk.getToken().equals(BEGIN.name()) || erroLexico()) {
             next();
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_BEGIN: Esperado = 'begin'\nObtido = \'" + tk.getId() + "'"));
+            erros.add(new Erro(tk.getLinha(), "ERRO_BEGIN: Esperado = 'begin', "
+                    + "obtido = '" + tk.getId() + "'"));
+            pularToken();
 
         }
     }
@@ -528,7 +694,9 @@ public class AnaliseSintatica {
         if (tk.getToken().equals(END.name()) || erroLexico()) {
             next();
         } else {
-            erros.add(new Erro(tk.getLinha(), "ERRO_END: Esperado = 'end'\nObtido = " + tk.getId()));
+            erros.add(new Erro(tk.getLinha(), "ERRO_END: Esperado = 'end', "
+                    + "obtido = '" + tk.getId() + "'"));
+            pularToken();
 
         }
     }

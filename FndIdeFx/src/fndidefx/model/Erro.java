@@ -17,6 +17,11 @@ public class Erro {
         this.line = line;
         this.msg = msg;
     }
+    
+    public Erro(String msg) {
+        this.line = -1;
+        this.msg = msg;
+    }
 
     public int getLinha() {
         return line;
@@ -32,6 +37,12 @@ public class Erro {
 
     public void setMsg(String msg) {
         this.msg = msg;
+    }
+
+    @Override
+    public String toString() {
+        String saida = line > 0? "Linha: "+line+" " : "";
+        return saida + msg;
     }
     
     

@@ -9,6 +9,8 @@ import static fndidefx.model.Token.TokenType.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  *
@@ -18,38 +20,38 @@ public final class Linguagem {
 
     private static Linguagem fnd = null;
     private HashMap<String, String[]> mapfirst, mapfollow;
-    private String[] arrbegin = new String[]{BEGIN.name()};
-    private String[] arrend = new String[]{END.name()};
+    private String[] arrbegin = new String[]{BEGIN.getRegex()};
+    private String[] arrend = new String[]{END.getRegex()};
     private String[] arrfinal = new String[]{"$"};
-    private String[] arrtipos = new String[]{INT.name(), DOUBLE.name(), EXP.name()};
-    private String[] arridvar = new String[]{ID_VAR.name()};
-    private String[] arrabrechave = new String[]{ABRE_CHAVE.name()};
-    private String[] arrfechachave = new String[]{FECHA_CHAVE.name()};
-    private String[] arrabreparentese = new String[]{ABRE_PARENTESE.name()};
-    private String[] arrfechaparentese = new String[]{FECHA_PARENTESE.name()};
-    private String[] arrcmd = new String[]{FOR.name(), WHILE.name(), IF.name(), ID_VAR.name()};
-    private String[] arrnot = new String[]{NOT.name()};
-    private String[] arroprel = new String[]{MENOR.name(), MAIOR.name(), IGUAL.name(),
-        MENOR_IGUAL.name(), MAIOR_IGUAL.name(), DIFERENTE.name()};
-    private String[] arropari = new String[]{MAIS.name(), MENOS.name(), MULT.name(), DIV.name()};
-    private String[] arrvirgula = new String[]{VIRGULA.name()};
-    private String[] arrif = new String[]{IF.name()};
-    private String[] arrmenor = new String[]{MENOR.name()};
-    private String[] arrmaior = new String[]{MAIOR.name()};
-    private String[] arrigual = new String[]{IGUAL.name()};
-    private String[] arrmenorigual = new String[]{MENOR_IGUAL.name()};
-    private String[] arrmaiorigual = new String[]{MAIOR_IGUAL.name()};
-    private String[] arrdiferente = new String[]{DIFERENTE.name()};
-    private String[] arrand = new String[]{AND.name()};
-    private String[] arror = new String[]{OR.name()};
-    private String[] arrelse = new String[]{ELSE.name()};
-    private String[] arrwhile = new String[]{WHILE.name()};
-    private String[] arrfor = new String[]{FOR.name()};
-    private String[] arrpontovirgula = new String[]{PONTO_VIRGULA.name()};
-    private String[] arratribuidor = new String[]{ATRIBUIR.name()};
-    private String[] arrvalorint = new String[]{VALOR_INT.name()};
-    private String[] arrvalordouble = new String[]{VALOR_DOUBLE.name()};
-    private String[] arrvalorexp = new String[]{VALOR_EXP.name()};
+    private String[] arrtipos = new String[]{INT.getRegex(), DOUBLE.getRegex(), EXP.getRegex()};
+    private String[] arridvar = new String[]{ID_VAR.getRegex()};
+    private String[] arrabrechave = new String[]{ABRE_CHAVE.getRegex()};
+    private String[] arrfechachave = new String[]{FECHA_CHAVE.getRegex()};
+    private String[] arrabreparentese = new String[]{ABRE_PARENTESE.getRegex()};
+    private String[] arrfechaparentese = new String[]{FECHA_PARENTESE.getRegex()};
+    private String[] arrcmd = new String[]{FOR.getRegex(), WHILE.getRegex(), IF.getRegex(), ID_VAR.getRegex()};
+    private String[] arrnot = new String[]{NOT.getRegex()};
+    private String[] arroprel = new String[]{MENOR.getRegex(), MAIOR.getRegex(), IGUAL.getRegex(),
+        MENOR_IGUAL.getRegex(), MAIOR_IGUAL.getRegex(), DIFERENTE.getRegex()};
+    private String[] arropari = new String[]{MAIS.getRegex(), MENOS.getRegex(), MULT.getRegex(), DIV.getRegex()};
+    private String[] arrvirgula = new String[]{VIRGULA.getRegex()};
+    private String[] arrif = new String[]{IF.getRegex()};
+    private String[] arrmenor = new String[]{MENOR.getRegex()};
+    private String[] arrmaior = new String[]{MAIOR.getRegex()};
+    private String[] arrigual = new String[]{IGUAL.getRegex()};
+    private String[] arrmenorigual = new String[]{MENOR_IGUAL.getRegex()};
+    private String[] arrmaiorigual = new String[]{MAIOR_IGUAL.getRegex()};
+    private String[] arrdiferente = new String[]{DIFERENTE.getRegex()};
+    private String[] arrand = new String[]{AND.getRegex()};
+    private String[] arror = new String[]{OR.getRegex()};
+    private String[] arrelse = new String[]{ELSE.getRegex()};
+    private String[] arrwhile = new String[]{WHILE.getRegex()};
+    private String[] arrfor = new String[]{FOR.getRegex()};
+    private String[] arrpontovirgula = new String[]{PONTO_VIRGULA.getRegex()};
+    private String[] arratribuidor = new String[]{ATRIBUIR.getRegex()};
+    private String[] arrvalorint = new String[]{VALOR_INT.getRegex()};
+    private String[] arrvalordouble = new String[]{VALOR_DOUBLE.getRegex()};
+    private String[] arrvalorexp = new String[]{VALOR_EXP.getRegex()};
 //    private String[] arr = new String[]{};
 //    private String[] arr = new String[]{};
 
@@ -71,7 +73,7 @@ public final class Linguagem {
         mapfirst.put("valor_double", arrvalordouble);
         mapfirst.put("valor_exp", arrvalorexp);
         mapfirst.put("valor", join(arrvalorint, arrvalordouble, arrvalorexp));
-        mapfirst.put("valor_gen", join( new String[]{MENOS.name()}, first("valor"),
+        mapfirst.put("valor_gen", join(new String[]{MENOS.getRegex()}, first("valor"),
                 first("id_var"), arrabreparentese));
         mapfirst.put("abre_parentese", arrabreparentese);
         mapfirst.put("fecha_parentese", arrfechaparentese);
@@ -100,6 +102,8 @@ public final class Linguagem {
         mapfirst.put("atribuidor", arratribuidor);
         mapfirst.put("atribuicao", arridvar);
         mapfirst.put("operacao_aritmetica", first("valor_gen"));
+        mapfirst.put("reservado", join(first("begin"), first("end"), first("tipo_var"),
+                arrif, arrelse, arrwhile, arrfor));
         //mapfirst.put("operacao_aritmetica", first("valor_gen"));
 
         //mapfirst.put("", );
@@ -178,23 +182,57 @@ public final class Linguagem {
         return set.toArray(arr);
     }
 
-    public boolean isFirst(String tkparent, String tkchild) {
-        String[] tks = mapfirst.get(tkparent);
+    public boolean isFirst(String keyparent, String lexchild) {
+//        if(tkparent.contains("var") && isReserved(tkchild))
+//            return false;
+        String[] tks = mapfirst.get(keyparent);
         if (tks != null) {
             for (String ts : tks) {
-                if (ts.equals(tkchild)) {
+                if (lexchild.matches(ts)) {
                     return true;
                 }
             }
         }
-
+        return false;
+    }
+    
+    public boolean isReserved(String word){
+        String[] res = mapfirst.get("reservado");
+        for (String re : res) {
+            if (word.matches(re)) {
+                    return true;
+            }
+        }
         return false;
     }
 
-    public boolean isFollow(String tkparent, String tkchild) {
-        String[] tks = mapfollow.get(tkparent);
+    public boolean isFirst(String simb) {
+        for (Iterator<Map.Entry<String, String[]>> it = mapfirst.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<String, String[]> entry = it.next();
+            for (String str : entry.getValue()) {
+                if (simb.matches(str)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void exibeMapFirst() {
+        for (Iterator<Map.Entry<String, String[]>> it = mapfirst.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<String, String[]> entry = it.next();
+            System.out.print(entry.getKey() + " : ");
+            for (String str : entry.getValue()) {
+                System.out.print(str + ", ");
+            }
+            System.out.println("");
+        }
+    }
+
+    public boolean isFollow(String keyparent, String lexchild) {
+        String[] tks = mapfollow.get(keyparent);
         for (String ts : tks) {
-            if (ts.equals(tkchild)) {
+            if (lexchild.matches(ts)) {
                 return true;
             }
         }

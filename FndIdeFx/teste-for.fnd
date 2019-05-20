@@ -1,0 +1,6 @@
+begin
+int a = 3e+3, b;
+for(i = 0; i < 10; i = i+1){
+    = i; // quem tem '=' como follow
+}
+end

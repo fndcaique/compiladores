@@ -44,6 +44,9 @@ public class TabelaSimbolos {
         }
         return table.get(indexlist.get(pos));
     }
+    
+    
+    
 
     private int find(String id) {
         int ini = 0, fim = indexlist.size() - 1;
@@ -73,5 +76,6 @@ public class TabelaSimbolos {
     public ArrayList<Integer> getIndexList() {
         return indexlist;
     }
+
 
 }

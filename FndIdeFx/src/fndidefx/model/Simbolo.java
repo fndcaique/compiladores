@@ -12,24 +12,25 @@ package fndidefx.model;
 public class Simbolo implements Comparable<Simbolo>{
     private String id, token, valor;
     private int linha;
-    private boolean init, declared;
+    private boolean declared, init;
     private int utilizada;
     private String tipo;
+    private Simbolo ant, prox;
     
     public Simbolo(String id, String token, int linha) {
         this.id = id;
         this.token = token;
         this.linha = linha;
+        this.valor = "#LIXO%";
     }
     
-    public Simbolo(String tipo, String id, String token, String valor, int linha) {
+    public Simbolo(String tipo, String id, String token, int linha) {
         this(id, token, linha);
         this.tipo = tipo;
-        declared = true;
-        init = false;
+        declared = init = false;
         utilizada = 0;
     }
-
+    
     public String getTipo() {
         return tipo;
     }
@@ -38,12 +39,12 @@ public class Simbolo implements Comparable<Simbolo>{
         this.tipo = tipo;
     }
 
-    public boolean isInit() {
-        return init;
+    public boolean isInitialized() {
+        return this.init;
     }
-
-    public void setInit(boolean init) {
-        this.init = init;
+    
+    public void setInitialized(boolean b){
+        this.init = b;
     }
 
     public boolean isDeclared() {
@@ -61,8 +62,6 @@ public class Simbolo implements Comparable<Simbolo>{
     public void setUtilizada(int utilizada) {
         this.utilizada = utilizada;
     }
-
-    
 
     public String getId() {
         return id;
