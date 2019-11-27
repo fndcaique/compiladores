@@ -111,7 +111,7 @@ public class WindowController implements Initializable {
         disable(true);
         colLexema.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getId()));
         colToken.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getToken()));
-        colLinha.setCellValueFactory(c -> new SimpleStringProperty((c.getValue().getLinha() + 1) + ""));
+        colLinha.setCellValueFactory(c -> new SimpleStringProperty((c.getValue().getLinha()) + ""));
         colValor.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getValor()));
 
         colLinha.setComparator((String o1, String o2) -> Integer.parseInt(o1) - Integer.parseInt(o2));
@@ -372,7 +372,7 @@ public class WindowController implements Initializable {
             initializeCodeArea(); 
             codearea.appendText(text);*/
             tbvsimbolos.getItems().clear();
-            new Thread(() -> {
+            //new Thread(() -> {
 
                 System.out.println("compilando...");
                 System.out.println("#########################################33");
@@ -389,14 +389,14 @@ public class WindowController implements Initializable {
 
                     }
                     double fim = System.currentTimeMillis();
-                    txLog.appendText("Compilado em " + ((fim-ini)/1000)+" segundos");
+                    txLog.appendText("Compilado em " + ((fim - ini) / 1000) + " segundos");
                 });
                 Platform.runLater(() -> {
-
-                    this.tbvsimbolos.getItems().setAll(anasin.getTabelaSimbolos().getTable());
+                    this.tbvsimbolos.getItems().clear();
+                    this.tbvsimbolos.getItems().addAll(anasin.getTabelaSimbolos().getTable());
                 });
                 System.out.println("COMPILADO");
-            }).start();
+            //}).start();
         }
     }
 

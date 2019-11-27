@@ -31,6 +31,14 @@ public class Simbolo implements Comparable<Simbolo>{
         utilizada = 0;
     }
     
+    public Simbolo(String tipo, String id, String token, String valor, int linha) {
+        this(id, token, linha);
+        this.valor = valor;
+        this.tipo = tipo;
+        declared = init = false;
+        utilizada = 0;
+    }
+    
     public String getTipo() {
         return tipo;
     }

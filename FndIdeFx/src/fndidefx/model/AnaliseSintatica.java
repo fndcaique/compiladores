@@ -7,6 +7,7 @@ package fndidefx.model;
 
 import static fndidefx.model.Token.TokenType.*;
 import java.util.ArrayList;
+import java.util.Stack;
 import javafx.util.Pair;
 
 /**
@@ -27,6 +28,7 @@ public class AnaliseSintatica {
     private Simbolo varRec;
 
     private String tipoAtual, codemed;
+    private boolean finalizado = false;
 
     public AnaliseSintatica(String code) {
         codemed = "";
@@ -58,29 +60,26 @@ public class AnaliseSintatica {
 
     private void next() {
         Simbolo s = analex.nextSimbolo();
-//        if (s != null) {
+        //if (!s.getToken().equals(END.name())) {
         arrtokens.add(s);
-//        }
         tkprevius = tk;
         tk = tknext;
         idxant++;
         idxatual = idxprox++;
-        tknext = /*idxprox < arrtokens.size() ?*/ arrtokens.get(idxprox) /*: null*/;
-//        if (tk == null) {
-//            return;
-//        }
-
+        tknext = arrtokens.get(idxprox);
         tablesimb.add(tk);
+
         s = tablevars.search(tk);
         if (s != null) {
             // existe na tabela de variaveis
             s.setLinha(tk.getLinha());
             tk = s;
-            //s.setUtilizada(s.getUtilizada()+1);
         } else if (ID_VAR.name().equals(tk.getToken())) {
-            //tk.setUtilizada(tk.getUtilizada()+1);
             tablevars.add(tk);
         }
+        //} else {
+        //  tk = arrtokens.get(idxprox);
+        //}
     }
 
     private void previus() {
@@ -190,7 +189,8 @@ public class AnaliseSintatica {
                     }
                 }
             } else// id_var ou valor
-             if (ling.isFirst("operador_aritmetico", tk.getId())
+            {
+                if (ling.isFirst("operador_aritmetico", tk.getId())
                         || ling.isFirst("operador_aritmetico", tknext.getId())) { // opcional
 
                     va = tk;
@@ -210,6 +210,7 @@ public class AnaliseSintatica {
                     erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VALOR, VALOR}, Obtido = '" + tk.getId() + "'"));
                     pularToken();
                 }
+            }
             // fim primeiro operando
 
             //operador
@@ -242,7 +243,8 @@ public class AnaliseSintatica {
                     }
                 }
             } else// id_var ou valor
-             if (ling.isFirst("operador_aritmetico", tknext.getId())) { // opcional
+            {
+                if (ling.isFirst("operador_aritmetico", tknext.getId())) { // opcional
 
                     va = tk;
                     Pair<String, String> saida = operacaoAritmetica();
@@ -261,6 +263,7 @@ public class AnaliseSintatica {
                     erros.add(new Erro(tk.getLinha(), "ERRO_BOOL: Esperado = {ID_VALOR, VALOR}, Obtido = '" + tk.getId() + "'"));
                     pularToken();
                 }
+            }
             // fim segundo operando
 
             if (ling.isFirst("and_or", tk.getId())) { // opcional
@@ -295,7 +298,7 @@ public class AnaliseSintatica {
                         erros.add(new Erro(tk.getLinha(), "ERRO_CASTING: Esperado = ')',"
                                 + "obtido = '" + tk.getId() + "'"));
                     }
-                } else{
+                } else {
                     return operacaoAritmetica();
                 }
             }
@@ -306,6 +309,7 @@ public class AnaliseSintatica {
             if ((ling.isFirst("valor", tk.getId()) || ID_VAR.name().equals(tk.getToken()))
                     && !ling.isFirst("operador_aritmetico", tknext.getId())) {
                 saida = new Pair<>(tk.getTipo(), tk.getId());
+                tk.setUtilizada(tk.getUtilizada() + 1);
                 next();
             } else if (ling.isFirst("operacao_aritmetica", tk.getId())) { // se a = -1;
                 saida = operacaoAritmetica();
@@ -318,7 +322,7 @@ public class AnaliseSintatica {
             if (!erro && saida != null) {
                 var.setValor(valor + saida.getValue());
                 var.setInitialized(true);
-                if(!cast.isEmpty()){
+                if (!cast.isEmpty()) {
                     saida = new Pair<>(cast, saida.getValue());
                 }
                 if (var.getTipo() != null && !var.getTipo().isEmpty()
@@ -596,7 +600,7 @@ public class AnaliseSintatica {
                 testeDeclarada(tk);
                 testeInicializada(tk);
                 tk.setUtilizada(tk.getUtilizada() + 1);
-                valor += tk.getValor();
+                valor += tk.getId();
                 tipo = prioritType(tipo, tk.getTipo());
                 next();
             } else {

@@ -1,28 +1,20 @@
-
 begin
-
-    int inteiro = 0, cont = 1+inteiro;
-    double decimal = 10.2+inteiro;
-    exp expo = 0;
-    //int a, b, c, d, e;
-
-    while(inteiro / 3 < 100) {    
-        decimal = decimal * 2;
-        inteiro = (inteiro + decimal); // mexer no retorno da operaýao aritmetica
-    }
-  
-    for(cont = 1; 1-decimal > 0 && cont < 999; cont = cont + 1){
-        decimal = decimal / 10;
-    }
-    a = 3;
-    if(1 + cont > 2 || cont+1 < 2){
-        inteiro = 10*cont; // mexer no retorno da operaýao aritmetica
-    } else if(decimal / cont == /**/10){
-        decimal = 0;
-    } else {
-        expo = 10000//-a;// mexer no retorno da atribuiýao
+    exp expo;
+    int inteiro = 0, cont = 1+inteiro, i;
+    double decimal = 10.2+inteiro, f;
+    cont = cont * 2;
+    i = (int)decimal;
+    if(cont == 7){
+        cont = cont/2;
     }
 
-    expo = 0;
+    while(cont > 0){
+        cont = cont - 1;
+    }
+    k = 3;
+    for(i = 0; 2 - i < 10 && f != 5; i = i+1){
+        i = i * 2 + k;
+        f = f - 1;
+    }
 
 end
